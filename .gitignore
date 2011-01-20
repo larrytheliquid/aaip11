@@ -11,6 +11,7 @@
 MAlonzo
 Default
 *.pdf
+*.dvi
 *.aux
 *.log
 *.synctex.gz

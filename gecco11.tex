@@ -12,7 +12,7 @@
 
 \maketitle
 \begin{abstract}
-Abstract goes here.
+Abstract here.
 \end{abstract}
 
 \category{1.2.2}{Artificial Intelligence}{Automatic Programming}[program synthesis, program verification]
@@ -24,8 +24,23 @@ Abstract goes here.
 
 \section{Introduction}
 
+Genetic Programming (GP) as a field began by using the meta-language
+(Lisp) to directly represent algorithmic terms. This is primarily due
+to the easy manipulation of parse trees and built-in evaluation
+function over them. Naturally, a lot of GP's early and prominent work
+was dominated by dynamic language implementations, clever avoidance of
+\cite{TO:DO} type-issues during evolution, and tree-based program terms
+for the algorithm to operate on.
+
+Since then, there has been work on using type-awareness to inform the
+different stages of the algorithm \cite{TO:DO} (population generation,
+genetic operators, etc.) There has also been plenty of separate work
+on alternative representations (linear, graph, grammar-based, etc.)
+
 \section{Conclusion}
+
 
 \bibliographystyle{abbrv}
 \bibliography{gecco11}
+
 \end{document}
