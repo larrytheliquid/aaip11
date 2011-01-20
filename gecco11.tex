@@ -184,8 +184,12 @@ indicates the change of a size-indexed global variable.
 
 For purposes of pedagogy, we will first consider how to represent a
 population of terms/programs in a typical non-dependent functional
-programming style. First let's create a new type representing the
-possible words for an to be used for some evoutionary problem.
+programming style.
+
+\subsection{Non-Dependent Types}
+
+First let's create a new type representing the possible words for an
+to be used for some evolutionary problem.
 
 \begin{verbatim}
   data Word : Set where
@@ -248,8 +252,28 @@ at some point in the run. Population size of course affects search
 space, so conclusions drawn from GP data that was affected by a
 population size bug would be incorrect.
 
+\subsection{Dependent Types}
 
+In the dependently typed world, an easy and effective way to ensure
+that some invariant is held is to create a type that can only possibly
+construct values that satisfy said invariant. In our case we would
+like the population size to be some exact number that we specify at the
+beginning of the run. This brings us to one of the canonical examples
+of a dependent type, the vector. We have already seen how the list
+type takes a parameter to achieve polymorphism. Vectors take an
+additional parameter representing their length.
 
+\begin{verbatim}
+  data Vec (A : Set) : ℕ → Set where
+    []  : Vec A zero
+    _∷_ : ∀ {n} (x : A) (xs : Vec A n)
+      → Vec A (suc n)
+\end{verbatim}
+
+The empty vector has a constant length of zero. The length of a vector
+produced by cons is the \textit{suc}cessor of whatever the length of
+the tail is. Given such an inductive definition of a type, the natural
+number index of any given vector can be nothing but its length.
 
 We will begin with a slow introduction to dependent types by
 considering the size of the population as a constant-size list
