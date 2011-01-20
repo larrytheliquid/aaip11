@@ -98,7 +98,6 @@ can be understood as operations on lists forming a monoid
 several well-understood and mathematically-backed results in the
 domain of permutations that are useful in a GP setting.
 
-
 In essence, we would like to come up with a list of invariants that
 the implementation of a GP algorithm should uphold in order to make us
 more confident in explanations of emergent phenomena in terms of
@@ -164,7 +163,7 @@ small word language in the boolean domain, made up of \texttt{true},
 such as \texttt{true} that would typically be considered as a value
 has no requirements on the input stack, and merely return the input
 stack plus a boolean value of true on pushed on top. On the other
-hand, `and` requires the input stack to have at least two elements,
+hand, \texttt{and} requires the input stack to have at least two elements,
 which is pops off in order to push their logical conjunction
 back. It should be pointed out that unlike in tree-based grammars, a
 previously pushed value may get used by an operation later in the
@@ -183,6 +182,75 @@ indicates the change of a size-indexed global variable.
 
 \section{Intro to Dependent Types}
 
+For purposes of pedagogy, we will first consider how to represent a
+population of terms/programs in a typical non-dependent functional
+programming style. First let's create a new type representing the
+possible words for an to be used for some evoutionary problem.
+
+\begin{verbatim}
+  data Word : Set where
+    true false not and or : Word
+\end{verbatim}
+
+This simple example language operates in the boolean domain using
+well-known constants and functions. Of course a stack program is not
+merely a single word, but a sequence of them that we would like to
+execute in order. The familiar cons-based list can serve as a
+container for several words, so let us type it out.
+
+\begin{verbatim}
+  data List (A : Set) : Set where
+    []  : List A
+    _∷_ : (x : A) (xs : List A) → List A
+
+  Term : Set
+  Term = List Word
+\end{verbatim}
+
+Notice in particular the \texttt{A : Set} part of the list
+type. \texttt{Set} is the type of types in Agda, and the \texttt{A} is
+a label that acts like a variable, but at the level of type
+signatures. In other words, we have created a polymorphic list type
+which is parameterized by what kind of data it can
+contain. \texttt{Term} is a specific instantiation of lists that can
+hold the \texttt{Word}s of our example language. Below are some
+examples of programs we can now represent.
+
+\begin{verbatim}
+  identity : Term
+  identity = not ∷ not ∷ []
+
+  anotherTrue : Term
+  anotherTrue = not ∷ not ∷ true ∷ []
+
+  nand : Term
+  nand = not ∷ and ∷ []
+\end{verbatim}
+
+GP requires us to work on not one but a collection of several terms,
+referred to as the \textbf{population}. Normally, this might be
+represented as a list of lists.
+
+\begin{verbatim}
+  Population : Set
+  Population = List Term
+\end{verbatim}
+
+While the type above is certainly functional, it leaves room for
+error. This brings us to our first example of preserving some GP
+invariant with the help of dependent types. Namely, the population
+that GP acts upon is expected to be a certain size, and it should stay
+that size as GP moves from one generation to the next. Given the
+total complexity due to initialization, selection, and genetic
+operators, it would not be surprising if a GP implementation had a bug
+that caused the population to be bigger or smaller than expected
+at some point in the run. Population size of course affects search
+space, so conclusions drawn from GP data that was affected by a
+population size bug would be incorrect.
+
+
+
+
 We will begin with a slow introduction to dependent types by
 considering the size of the population as a constant-size list
 throughout all generations of program evolution. For example, consider
@@ -192,14 +260,11 @@ in some fashion (e.g. genetic operations after tournament selection,
 elitism, or constant-size updating \cite{montana:strongtree}). We
 intend that the size of the population in the first generation, the
 subsequent generations, and the final generations remains
-constant. Yet, it is not hard to imagine an off-by-1 error that drops
-an individual somewhere, and maybe even another that adds a different
-individual back somewhere else. On the more extreme end, a population
-may be halved at some point and double at another, leaving the black
-box obversation of the final population correct. Such examples leave
-ample opportunity for giving credit of strange behavior (such as
-"epihanies" \cite{to:do}) to evolution, when really the search space
-was fundamentally altered at that point.
+constant.
+
+%% ample opportunity for giving credit of strange behavior (such as
+%% "epihanies" \cite{to:do}) to evolution, when really the search space
+%% was fundamentally altered at that point.
 
 As such, we will first consider the introductory task of representing
 a constant-size population as a parameter and return type of a
@@ -207,7 +272,11 @@ black-box function which calculates the next generation from the
 previous. Because the language semantics already assure us purity and
 totality, let us focus our attention on the type signature of such a
 function to see what else we can know at compile time rather than
-looking at runtime-specific implementation details. We can see in TODO
+looking at runtime-specific implementation details.
+
+%% Since 
+
+We can see in TODO
 that we have a polymorphic function from a list of some arbitrary type
 to another list of the same type. Statically, however, the length of
 either of lists is not known and could change arbitrarily. Compare
@@ -215,9 +284,9 @@ this with the type signature of the function in TODO which uses the
 type of vectors rathers than lists. A vector is like a list, but has
 an additional type-level parameter (called an "index"). This parameter
 is a natural number, and represents the length of the list. Just as
-the polymorphic parameter `A` ensures that the type of lists/vectors
+the polymorphic parameter \texttt{A} ensures that the type of lists/vectors
 does not vary between the input and output, the natural number
-parameter `n` ensures that the length of the population remains
+parameter \texttt{n} ensures that the length of the population remains
 constant.
 
 For greater understanding, we will show how the types of lists and
