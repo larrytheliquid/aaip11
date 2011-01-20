@@ -1,4 +1,8 @@
 \documentclass{acm_proc_article-sp}
+\usepackage[mathletters]{ucs}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{tipa,textcomp}
 
 \begin{document}
 
@@ -205,7 +209,7 @@ container for several words, so let us type it out.
 \begin{verbatim}
   data List (A : Set) : Set where
     []  : List A
-    _∷_ : (x : A) (xs : List A) → List A
+    _::_ : (x : A) (xs : List A) → List A
 
   Term : Set
   Term = List Word
@@ -222,13 +226,13 @@ examples of programs we can now represent.
 
 \begin{verbatim}
   identity : Term
-  identity = not ∷ not ∷ []
+  identity = not :: not :: []
 
   anotherTrue : Term
-  anotherTrue = not ∷ not ∷ true ∷ []
+  anotherTrue = not :: not :: true :: []
 
   nand : Term
-  nand = not ∷ and ∷ []
+  nand = not :: and :: []
 \end{verbatim}
 
 GP requires us to work on not one but a collection of several terms,
@@ -266,14 +270,35 @@ additional parameter representing their length.
 \begin{verbatim}
   data Vec (A : Set) : ℕ → Set where
     []  : Vec A zero
-    _∷_ : ∀ {n} (x : A) (xs : Vec A n)
+    _::_ : ∀ {n} (x : A) (xs : Vec A n)
       → Vec A (suc n)
+
+  Population : ℕ → Set
+  Population n = Vec Term n
 \end{verbatim}
 
 The empty vector has a constant length of zero. The length of a vector
 produced by cons is the \textit{suc}cessor of whatever the length of
 the tail is. Given such an inductive definition of a type, the natural
-number index of any given vector can be nothing but its length.
+number index of any given vector can be nothing but its length. Just
+like our definition of \texttt{Term}, \texttt{Population} is just a
+specification instantiation of a more general type (\texttt{Vec}).
+
+As an example, here is a small population of the three terms presented
+earlier.
+
+\begin{verbatim}
+  pop : Population 3
+  pop = identity :: anotherTrue :: nand :: []
+\end{verbatim}
+
+Once again note that the type requies a population of exactly three
+terms. If we were to supply more or less, a type error would occur at
+compile time. Effectively we move checking of certain \textit{semantic}
+properties of our program to compile time, meaning much less can go
+wrong once a program can be run.
+
+%% lookup + mod next
 
 We will begin with a slow introduction to dependent types by
 considering the size of the population as a constant-size list
@@ -319,7 +344,7 @@ TODO we see the that a constructively defined list with an empty case
 with no arguments, and a "cons" case which takes an argument of
 polymorphic type \texttt{A}, as well as a previous list of the same
 type as the resulting list. Note that Agda supports arbitrary unicode
-characters such as \texttt{∷} as identifiers, and underscores to
+characters such as \texttt{::} as identifiers, and underscores to
 indicate where arguments go for prefix/infix/mixfix constructors or
 functions. If we compare \texttt{List} with \texttt{Vec}, we notice
 the aforementioned additional natural number index parameter. The
