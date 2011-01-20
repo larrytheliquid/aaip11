@@ -2,7 +2,8 @@
 
 \begin{document}
 
-\title{Verified Stack-Based Genetic Programming via Dependent Types}
+\title{Verified Stack-Based Genetic Programming\\
+via Dependent Types}
 
 \numberofauthors{1}
 \author{
@@ -29,13 +30,127 @@ Genetic Programming (GP) as a field began by using the meta-language
 to the easy manipulation of parse trees and built-in evaluation
 function over them. Naturally, a lot of GP's early and prominent work
 was dominated by dynamic language implementations, clever avoidance of
-\cite{TO:DO} type-issues during evolution, and tree-based program terms
+\cite{to:do} type-issues during evolution, and tree-based program terms
 for the algorithm to operate on.
 
 Since then, there has been work on using type-awareness to inform the
-different stages of the algorithm \cite{TO:DO} (population generation,
+different stages of the algorithm \cite{to:do} (population generation,
 genetic operators, etc.) There has also been plenty of separate work
 on alternative representations (linear, graph, grammar-based, etc.)
+
+Significant advances have been made investigating how variations of
+the basic algorithm affect properties like search space, fitness
+gradients, and overall performance. One area that has not seen as much
+exploration is the correctness of the implementation of a GP
+algorithm. GP involves significant complexity, as it must maintain a
+population of program terms, update the population across generations
+with term-manipulating genetic operators, evaluation of individuals,
+selection, TODO.
+
+The most frequently used method to compare the performance of a
+particular GP implementation is to compute basic statistics about
+things like fitness scores, size of terms, TODO and see how they
+change as algorithm stages progress. This often takes the form of
+looking at such tabulated, graphed, or otherwise visualized data and
+drawing conclusions about how evolution must have done this or that to
+explain interesting portions of the data. Seeing what evolution is
+buying us is, after all, the point.
+
+That leads us to a problem that we would like to address. Namely,
+being sure that the behavior of the algorithm is what we expect. Given
+the complexity of these algorithsm, it would be very unfortunate,
+although not unimaginable, to have bugs in implementation that cause
+certain phenomena to occur in the data analyzed in the end. We would
+like to avoid researchers drawing conclusions from implementation
+mistakes and attributing and propagating evolutionary explanations for
+them.
+
+In harmony with this goal is making sure evolution is used only where
+necessary, rather than taking a swiss army knife approach of forcing
+evolution solve all aspects of a problem. One
+related GP problem is that of ill-formed programs. Typical
+dynamic-type inspired solutions either \cite{koza:onlygood}, assign a minimal fitness to
+ill-formed programs, or treat failing operations as
+NOOP's \footnote{In a stack-based language, a runtime failure can act like a
+  NOOP by continuing execution with an unmodified stack state. However,
+  tree-based languages do not have a simple way to return nothing}.
+The first approach does not scale up to problems involving more
+complex types that are not related in meaningful ways for the purpose
+of conversions. The second approach puts more of a burden on evolution, and the third
+leads to bloat (a problem evolutionary algorithms already have enough
+of.)
+
+Instead, we will use static-typing inspired approaches featured in
+strongly typed GP \cite{montana:strongtree, tchernev:forthcross} that make algorithmic
+modifications to constrain the search space that evolution must
+explore. Further, to fit with our other goal of avoiding
+implementation mistakes, operating on a simple structure that still
+has ample opportunity for useful program recombination is
+desirable. Although tree structures are the most common GP term
+representation, functions designed to manipulate them are not as
+straightforward as those on list/linear structures. Tchernev
+\cite{tchernev:forthcross, tchernev:crossmethods} has shown how simple
+methods for type-safe linear crossover can be competitive with those
+of subtree crossover. 1-dimensional flat structures such as lists are
+intuitively simpler than nested trees, although more technically this
+can be understood as operations on lists forming a monoid
+\cite{to:do}. Additionally, functions operating on list monads have
+several well-understood and mathematically-backed results in the
+domain of permutations that are useful in a GP setting.
+
+
+In essence, we would like to come up with a list of invariants that
+the implementation of a GP algorithm should uphold in order to make us
+more confident in explanations of emergent phenomena in terms of
+evolution. A programming language that is capable of succinctly
+expressing our desired properties, and has the semantics to be able to
+check them, is desireable. For basic hygene, we want to use a purely
+functional language (the most popular example being Haskell
+\cite{to:do}). The complexity of algorithm requires several
+interacting pieces, decisions depending on randomness, the
+manipulation of terms, and updating a population. An implementation in
+an impure language leaves many an opportunity for mistakes in the
+interaction of various side affecting operations. Conversely, a pure
+settings allows for a more structured, modular approach, to GP that
+explicitly represents side effects via monads. Simulation of the side
+effects in question are already mature and well-understood.
+
+Secondly, the typical GP program must deal with things like catching
+exceptions produced by failing programs, and assigning them low
+fitness. The random generation of programs can also produce programs
+that fail to terminate or take a long time to terminate. The halting
+problem \cite{to:do} tells us that we cannot distinguish between the
+two, but it would useful to handle the two cases differently
+(e.g. giving a low fitness to the former but allowing the latter to
+complete running). Although though Haskell is a pure language, it is
+also a partial language. When using a partial meta-language, it is
+possible to conflate problems having to do with exceptions and
+termination in the meta-language implementation, with those observed
+in object-language. Consequently, we seek a language that is both pure
+and total.
+
+In a certain sense, Hindley-Milner based languages that are both pure
+and total just shift errors from being classified as runtime errors to
+being classified as logic errors. This is because part of totality is
+for a function to be coverage complete in its case analysis. For
+example, a function that is designed to only work on some cases of an
+argument must wrap its output in a failure-simulating monad
+(e.g. Maybe). Enough nested functions passing around such simulated
+failure can lead to sloppy programming that fails too much in one
+place, or returns nonsense but type-correct values in
+others. Furthermore, we need to be able express more complex GP
+domain-specific invariants (such as type-correct crossover) that are
+not afforded to us by purity or totality alone. This finally leads us
+to the class of languages suitable for the task at hand, namely
+dependently typed programming languages.
+
+In addition to being pure and total, languages with dependent types
+are characterized by the property that labeled dependencies can exist
+at the type level of programs. Moreover, the typical distinction
+between the kinds of programs expressible at the level of values and
+at the level of types is no longer. In other words, arbitrarily
+complex functions can be used in type signatures in order to constrain
+or otherwise express the kind of data that a function operates on.
 
 \section{Conclusion}
 
