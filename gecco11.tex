@@ -152,6 +152,96 @@ at the level of types is no longer. In other words, arbitrarily
 complex functions can be used in type signatures in order to constrain
 or otherwise express the kind of data that a function operates on.
 
+\section{Stack Languages}
+
+In stack-based languages \cite{to:do} there is no
+distinction between values and functions. Instead, each syntactic
+element is referred to as a "word". Every word can be modeled as a
+function which takes the previous stack state as a value and returns
+the subsequent, possibly altered, state. Consider for example a
+small word language in the boolean domain, made up of \texttt{true},
+\texttt{false}, \texttt{and}, \texttt{or} , and \texttt{not}. A word
+such as \texttt{true} that would typically be considered as a value
+has no requirements on the input stack, and merely return the input
+stack plus a boolean value of true on pushed on top. On the other
+hand, `and` requires the input stack to have at least two elements,
+which is pops off in order to push their logical conjunction
+back. It should be pointed out that unlike in tree-based grammars, a
+previously pushed value may get used by an operation later in the
+program. To reiterate, each word takes the entire global stack state
+as input and returns the entire stack state as output. TODO
+
+In a monotypic language, a simple static type system emerges which
+assigns to each word a natural number representing the required input
+stack length, and a second number representing the output stack
+length. A sequence of such words forms a stack program, for which an
+aggregate input/output pair can be computed. One can think of this
+pair as a number representing how large of a stack is
+\textit{consumed}, and another representing the size of the
+\textit{produced} stack... or alternatively function arity which
+indicates the change of a size-indexed global variable.
+
+\section{Intro to Dependent Types}
+
+We will begin with a slow introduction to dependent types by
+considering the size of the population as a constant-size list
+throughout all generations of program evolution. For example, consider
+a GP program run that uses an population of size 200. During each
+generation, the previous population must be used to generate the next
+in some fashion (e.g. genetic operations after tournament selection,
+elitism, or constant-size updating \cite{montana:strongtree}). We
+intend that the size of the population in the first generation, the
+subsequent generations, and the final generations remains
+constant. Yet, it is not hard to imagine an off-by-1 error that drops
+an individual somewhere, and maybe even another that adds a different
+individual back somewhere else. On the more extreme end, a population
+may be halved at some point and double at another, leaving the black
+box obversation of the final population correct. Such examples leave
+ample opportunity for giving credit of strange behavior (such as
+"epihanies" \cite{to:do}) to evolution, when really the search space
+was fundamentally altered at that point.
+
+As such, we will first consider the introductory task of representing
+a constant-size population as a parameter and return type of a
+black-box function which calculates the next generation from the
+previous. Because the language semantics already assure us purity and
+totality, let us focus our attention on the type signature of such a
+function to see what else we can know at compile time rather than
+looking at runtime-specific implementation details. We can see in TODO
+that we have a polymorphic function from a list of some arbitrary type
+to another list of the same type. Statically, however, the length of
+either of lists is not known and could change arbitrarily. Compare
+this with the type signature of the function in TODO which uses the
+type of vectors rathers than lists. A vector is like a list, but has
+an additional type-level parameter (called an "index"). This parameter
+is a natural number, and represents the length of the list. Just as
+the polymorphic parameter `A` ensures that the type of lists/vectors
+does not vary between the input and output, the natural number
+parameter `n` ensures that the length of the population remains
+constant.
+
+For greater understanding, we will show how the types of lists and
+vectors are defined, and how their values can be used and misused. In
+TODO we see the that a constructively defined list with an empty case
+with no arguments, and a "cons" case which takes an argument of
+polymorphic type \texttt{A}, as well as a previous list of the same
+type as the resulting list. Note that Agda supports arbitrary unicode
+characters such as \texttt{∷} as identifiers, and underscores to
+indicate where arguments go for prefix/infix/mixfix constructors or
+functions. If we compare \texttt{List} with \texttt{Vec}, we notice
+the aforementioned additional natural number index parameter. The
+empty case is defined to be of length zero and, and the cons case
+takes a vector of arbitrary length as an argument, and returns a
+vector whose length is one greater (the successor). In essence, we
+have a definition of vectors that contains their length merely by
+construction. As such, one can be sure when speaking about vectors
+that the natural number index indeed represents length, as there is no
+way of constructing the term otherwise. TODO is simple and concise,
+making it understandable and giving us confidence in the
+length-preserving invariant we would like to enforce when generating
+the population for the next generation.
+
+
 \section{Conclusion}
 
 
