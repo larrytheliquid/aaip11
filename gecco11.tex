@@ -20,17 +20,17 @@ via Dependent Types}
 Abstract here.
 \end{abstract}
 
-\category{1.2.2}{Artificial Intelligence}{Automatic Programming}[program synthesis, program verification]
-\category{D.1.1}{Programming Techniques}{Functional Programming}[dependent types]
+\category{D.1.1}{Programming Techniques}{Applicative (Functional) Programming}
+\category{I.2.2}{Artificial Intelligence}{Automatic Programming}[program synthesis, program verification]
 
 \terms{Verification}
 
-\keywords{stack-based gp, linear gp, dependent types, purely functional gp, formal methods}
+\keywords{stack-based gp, linear gp, dependent types, purely functional programming, formal methods}
 
 \section{Introduction}
 
 Genetic Programming (GP) as a field began by using the meta-language
-(Lisp) to directly represent algorithmic terms. This is primarily due
+(Lisp) to directly represent candidate solutions for a problem. This is primarily due
 to the easy manipulation of parse trees and built-in evaluation
 function over them. Naturally, a lot of GP's early and prominent work
 was dominated by dynamic language implementations, clever avoidance of
@@ -261,7 +261,7 @@ population size bug would be incorrect.
 In the dependently typed world, an easy and effective way to ensure
 that some invariant is held is to create a type that can only possibly
 construct values that satisfy said invariant. In our case we would
-like the population size to be some exact number that we specify at the
+like the population size to be some exact natural number that we specify at the
 beginning of the run. This brings us to one of the canonical examples
 of a dependent type, the vector. We have already seen how the list
 type takes a parameter to achieve polymorphism. Vectors take an
@@ -277,12 +277,12 @@ additional parameter representing their length.
   Population n = Vec Term n
 \end{verbatim}
 
-The empty vector has a constant length of zero. The length of a vector
-produced by cons is the \textit{suc}cessor of whatever the length of
+The empty vector has a constant length of \texttt{zero}. The length of a vector
+produced by cons is the \textbf{suc}cessor of whatever the length of
 the tail is. Given such an inductive definition of a type, the natural
 number index of any given vector can be nothing but its length. Just
 like our definition of \texttt{Term}, \texttt{Population} is just a
-specification instantiation of a more general type (\texttt{Vec}).
+specific instantiation of a more general type (\texttt{Vec}).
 
 As an example, here is a small population of the three terms presented
 earlier.
@@ -292,11 +292,14 @@ earlier.
   pop = identity :: anotherTrue :: nand :: []
 \end{verbatim}
 
-Once again note that the type requies a population of exactly three
-terms. If we were to supply more or less, a type error would occur at
+Once again note that the type requires a population of exactly three
+terms. If we were to supply any more or less, a type error would occur at
 compile time. Effectively we move checking of certain \textit{semantic}
 properties of our program to compile time, meaning much less can go
-wrong once a program can be run.
+wrong once a program can be run. \footnote{In fact, the only thing
+  that can go wrong are logic errors due to bad encodings by the
+  programmer. Typical runtime errors due to non-termination or lack of
+  coverage are disallowed by the compiler.}
 
 %% lookup + mod next
 
