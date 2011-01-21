@@ -6,8 +6,10 @@
 
 \begin{document}
 
-\title{Verified Stack-Based Genetic Programming\\
+\title{[DRAFT] Verified Stack-Based Genetic Programming\\
 via Dependent Types}
+
+\subtitle{Genetic Programming}
 
 \numberofauthors{1}
 \author{
@@ -189,7 +191,9 @@ indicates the change of a size-indexed global variable.
 
 For purposes of pedagogy, we will first consider how to represent a
 population of terms/programs in a typical non-dependent functional
-programming style.
+programming style. Thereafter, we will extend the example to use
+dependent types.
+\footnote{For a proper tutorial on dependently typed programming in Agda, see \cite{to:do}}
 
 \subsection{Non-Dependent Types}
 
@@ -238,7 +242,7 @@ examples of programs we can now represent.
 
 GP requires us to work on not one but a collection of several terms,
 referred to as the \textbf{population}. Normally, this might be
-represented as a list of lists.
+represented as a list of lists of terms.
 
 \begin{verbatim}
   Population : Set
@@ -271,7 +275,7 @@ additional parameter representing their length.
 \begin{verbatim}
   data Vec (A : Set) : ℕ → Set where
     []  : Vec A zero
-    _::_ : ∀ {n} → A → Vec A n
+    _::_ : {n : ℕ} → A → Vec A n
       → Vec A (suc n)
 
   Population : ℕ → Set
@@ -303,7 +307,35 @@ wrong once a program can be run.
   programmer. Typical runtime errors due to non-termination or lack of
   coverage are disallowed by the compiler.}
 
-%% lookup + mod next
+Now that we've seen how to construct a dependent type, let's see how
+a function operating on \texttt{Vec} can make use of its properties.
+During selection, GP will need to retrieve a candidate program from
+the population. An all too common error taught even at introductory
+level programming is indexing outside the bounds of a container
+structure. How might one prevent this error? Ideally the type of the
+parameter used to lookup a member should have exactly as many values
+as the length of our vector. This way, a bijection would exist between
+the lookup index type and the vector.
+
+\begin{verbatim}
+  data Fin : ℕ → Set where
+    zero : {n : ℕ} → Fin (suc n)
+    suc  : {n : ℕ} → Fin n → Fin (suc n)
+
+  lookup : ∀ {A n} → Fin n → Vec A n → A
+  lookup zero (x :: xs) = x
+  lookup (suc i) (x :: xs) = lookup i xs
+\end{verbatim}
+
+The type of finite sets \texttt{Fin} has exactly \texttt{n} possible
+values for any \texttt{Fin n}. In the \texttt{lookup} function the
+natural number index is shared between the finite set and vector
+parameters. The effect of this sharing is that every finite set
+argument has exactly as many possible constructions as the length of
+the vector argument, statically preventing any index out of bounds
+errors from occuring. Since our \texttt{Population} is merely a
+specific kind of vector, we are able to use the safe \texttt{lookup}
+when defining a function for the selection process.
 
 \section{Blah}
 
