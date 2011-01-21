@@ -338,7 +338,7 @@ errors from occuring. Since our \texttt{Population} is merely a
 specific kind of vector, we are able to use the safe \texttt{lookup}
 when defining a function for the selection process.
 
-\section{Indexed Terms}
+\section{Requirement-Indexed Terms}
 
 In the previous section we represented the terms in our population as
 unadorened lists of words. In order to perform type-safe crossover in
@@ -456,7 +456,7 @@ can change is the original number of arguments on the stack.
   ab = and :: []
 \end{verbatim}
 
-\subsection{Transitive Append}
+\section{Transitive Operations}
 
 When writing genetic operators, for example
 \cite{tchernev:forthcross}'s 1-point crossover, we need to take
@@ -464,9 +464,12 @@ subsections of different terms and recombine them in a safe
 matter. Tchernev points out that we need to split parent terms at a
 point of equal output stacks in order for a safe recombination. But,
 what is the criterion for a safe append of two arbitrary terms after
-they have been split in this manner? As was hinted at in the variable
-names of the previous example, a safe append illustrates the
-transitive property.
+they have been split in this manner?
+
+\subsection{Transitive Append}
+
+As was hinted at in the variable names of the previous example, a safe
+append illustrates the transitive property.
 
 \begin{verbatim}
   _++_ : {A B C : ℕ} →
@@ -486,7 +489,7 @@ degree of confidence that we are doing the right thing when used
 inside another function such as crossover. In fact, as we shall soon
 see the type of this function gives us more than just confidence.
 
-\section{Transitive Split}
+\subsection{Transitive Split}
 
 Now that we have a function to safely recombine terms in a transitive
 way, we need to come up with a compatible way to split a crossover
@@ -501,6 +504,8 @@ in \cite{oury:tpop}.
       (ys : Term A B) →
       Split B (xs ++ ys)
 \end{verbatim}
+
+
 
 \section{Old DTP Intro}
 
