@@ -392,6 +392,36 @@ between the output description of \texttt{1 + n} and the input
 description of \texttt{2 + n}, we can see that the stack size will be
 one less than whatever it was previously.
 
+\subsection{Formal Terms}
+
+Now that we know how we want the input and output requirements of
+words to behave with respect to previous stack states, we can put our
+prior work into practice by making a new concrete term type. When we
+string together a sequence of words, the compound value should
+indicate its input and output requirements. As such, our new
+\texttt{Term} type should have one natural number index for input
+requirements, and another for the resulting output.
+
+\begin{verbatim}
+  data Term (A : ℕ) : ℕ → Set where
+    []  : Term A A
+
+    _::_ : {n : ℕ} →
+      (w : Word) → Term A (In w n) →
+      Term A (Out w n)
+\end{verbatim}
+
+The empty term has no requirements on the input stack, and returns a
+stack of the same size as the output, representing the identity
+function. In the cons case the previous term has \texttt{In} as its
+output and the resulting type has \texttt{Out} as its output. Notice
+the use of an implicit \texttt{n} variable that is passed to both
+\texttt{In} and \texttt{Out}. Agda will unify this variable to
+whatever unique typing constraints make sense. In other words, our two
+informal assumptions of a unifying \texttt{n} variable that is shared
+between the input and output functions is formally captured in the
+cons case of the term type.
+
 \section{Blah}
 
 We will begin with a slow introduction to dependent types by
