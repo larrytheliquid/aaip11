@@ -23,7 +23,7 @@ Abstract here.
 \category{D.1.1}{Programming Techniques}{Applicative (Functional) Programming}
 \category{I.2.2}{Artificial Intelligence}{Automatic Programming}[program synthesis, program verification]
 
-\terms{Verification}
+\terms{Languages, Reliability, Verification}
 
 \keywords{stack-based gp, linear gp, dependent types, purely functional programming, formal methods}
 
@@ -75,7 +75,8 @@ evolution solve all aspects of a problem. One
 related GP problem is that of ill-formed programs. Typical
 dynamic-type inspired solutions either \cite{koza:onlygood}, assign a minimal fitness to
 ill-formed programs, or treat failing operations as
-NOOP's \footnote{In a stack-based language, a runtime failure can act like a
+NOOP's
+\footnote{In a stack-based language, a runtime failure can act like a
   NOOP by continuing execution with an unmodified stack state. However,
   tree-based languages do not have a simple way to return nothing}.
 The first approach does not scale up to problems involving more
@@ -166,7 +167,7 @@ small word language in the boolean domain, made up of \texttt{true},
 \texttt{false}, \texttt{and}, \texttt{or} , and \texttt{not}. A word
 such as \texttt{true} that would typically be considered as a value
 has no requirements on the input stack, and merely return the input
-stack plus a boolean value of true on pushed on top. On the other
+stack plus a boolean value of true pushed on top. On the other
 hand, \texttt{and} requires the input stack to have at least two elements,
 which is pops off in order to push their logical conjunction
 back. It should be pointed out that unlike in tree-based grammars, a
@@ -248,12 +249,12 @@ While the type above is certainly functional, it leaves room for
 error. This brings us to our first example of preserving some GP
 invariant with the help of dependent types. Namely, the population
 that GP acts upon is expected to be a certain size, and it should stay
-that size as GP moves from one generation to the next. Given the
-total complexity due to initialization, selection, and genetic
+that size as GP progresses from one generation to the next. Given the
+sum complexity due to initialization, selection, and genetic
 operators, it would not be surprising if a GP implementation had a bug
 that caused the population to be bigger or smaller than expected
 at some point in the run. Population size of course affects search
-space, so conclusions drawn from GP data that was affected by a
+space, so conclusions drawn from GP run data that was affected by a
 population size bug would be incorrect.
 
 \subsection{Dependent Types}
@@ -278,7 +279,7 @@ additional parameter representing their length.
 \end{verbatim}
 
 The empty vector has a constant length of \texttt{zero}. The length of a vector
-produced by cons is the \textbf{suc}cessor of whatever the length of
+produced by cons is the \texttt{suc}cessor of whatever the length of
 the tail is. Given such an inductive definition of a type, the natural
 number index of any given vector can be nothing but its length. Just
 like our definition of \texttt{Term}, \texttt{Population} is just a
@@ -292,16 +293,19 @@ earlier.
   pop = identity :: anotherTrue :: nand :: []
 \end{verbatim}
 
-Once again note that the type requires a population of exactly three
+Once again, note that the type requires a population of exactly three
 terms. If we were to supply any more or less, a type error would occur at
 compile time. Effectively we move checking of certain \textit{semantic}
 properties of our program to compile time, meaning much less can go
-wrong once a program can be run. \footnote{In fact, the only thing
+wrong once a program can be run.
+\footnote{In fact, the only thing
   that can go wrong are logic errors due to bad encodings by the
   programmer. Typical runtime errors due to non-termination or lack of
   coverage are disallowed by the compiler.}
 
 %% lookup + mod next
+
+\section{Blah}
 
 We will begin with a slow introduction to dependent types by
 considering the size of the population as a constant-size list
