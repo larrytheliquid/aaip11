@@ -275,8 +275,8 @@ additional parameter representing their length.
 \begin{verbatim}
   data Vec (A : Set) : ℕ → Set where
     []  : Vec A zero
-    _::_ : {n : ℕ} → A → Vec A n
-      → Vec A (suc n)
+    _::_ : {n : ℕ} → A → Vec A n →
+      Vec A (suc n)
 
   Population : ℕ → Set
   Population n = Vec Term n
@@ -482,13 +482,27 @@ transitive property.
 If an attempt is made to append two terms whose inputs/output
 requirements do not satisfy each other, a compile error will
 occur. Using a function with a such an informative type gives a high
-degree of confidence that we are doing the right thing when usedi
+degree of confidence that we are doing the right thing when used
 inside another function such as crossover. In fact, as we shall soon
 see the type of this function gives us more than just confidence.
 
+\section{Transitive Split}
 
+Now that we have a function to safely recombine terms in a transitive
+way, we need to come up with a compatible way to split a crossover
+parent. The following is a derivative of the \texttt{SplitView} type
+in \cite{oury:tpop}.
 
-\section{Blah}
+\begin{verbatim}
+  data Split {A C : ℕ} (B : ℕ) :
+    Term A C → Set where
+    _++'_ :
+      (xs : Term B C)
+      (ys : Term A B) →
+      Split B (xs ++ ys)
+\end{verbatim}
+
+\section{Old DTP Intro}
 
 We will begin with a slow introduction to dependent types by
 considering the size of the population as a constant-size list
