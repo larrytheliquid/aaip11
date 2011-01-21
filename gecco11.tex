@@ -323,7 +323,7 @@ the lookup index type and the vector.
     suc  : {n : ℕ} → Fin n → Fin (suc n)
 
   lookup : ∀ {A n} → Fin n → Vec A n → A
-  lookup zero (x :: xs) = x
+  lookup    zero (x :: xs) = x
   lookup (suc i) (x :: xs) = lookup i xs
 \end{verbatim}
 
@@ -336,6 +336,61 @@ the vector argument, statically preventing any index out of bounds
 errors from occuring. Since our \texttt{Population} is merely a
 specific kind of vector, we are able to use the safe \texttt{lookup}
 when defining a function for the selection process.
+
+\section{Indexed Terms}
+
+In the previous section we represented the terms in our population as
+unadorened lists of words. In order to perform type-safe crossover in
+a manner described by \cite{tchernev:forthcross}, the type of our
+terms will need to be more telling.
+
+\subsection{Informal Exploration}
+
+Let us start by informally exploring what kind of input/output
+requirements each word in our example language should express. 
+
+\begin{verbatim}
+  In  : Word → ℕ → ℕ
+  In  true  n =     n
+  In  false n =     n
+  In  not   n = 1 + n
+  In  and   n = 2 + n
+  In  or    n = 2 + n
+
+  Out : Word → ℕ → ℕ
+  Out true  n = 1 + n
+  Out false n = 1 + n
+  Out not   n = 1 + n
+  Out and   n = 1 + n
+  Out or    n = 1 + n
+\end{verbatim}
+
+Both of these functions really just take a word, a natural number, and
+return a natural number. There is nothing special about them that
+enforces type constraints in a clever way. But, as we are being
+informal let us pretend for a moment that two special properties exist
+for these functions. The \texttt{In} function declares what the input
+requirements are on the current stack state for each word.
+
+Thus, the first property we will pretend to exist is that the natural number
+parameter is a special implicit variable that unifies with whatever
+other else we require in the return value. As such, \texttt{true} has
+no input requirements whatsoever, and the stack state can be any
+\texttt{n}. In contrast, \texttt{and} requires that the current stack
+should at least be of size two, but the \texttt{n} is free to unify
+with more inputs that \texttt{and} will ignore.
+
+The second imagined property is that the \texttt{n} between the input
+and output functions shall be one and the same. Hence, for
+\texttt{true} the output stack shall be whatever the input stack was,
+plus one value. Pay special attention to \texttt{and}, as it
+illustrates how we expect operations to behave. We know that the input
+must be \texttt{2 + n}, as \texttt{and} consumes two values. Of
+course, \texttt{and} also produces one value to put back on the
+stack, but not just any stack. It pushes it back on the same stack, so
+between the output description of \texttt{1 + n} and the input
+description of \texttt{2 + n}, we can see that the stack size will be
+one less than whatever it was previously.
 
 \section{Blah}
 
