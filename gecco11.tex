@@ -505,7 +505,27 @@ in \cite{oury:tpop}.
       Split B (xs ++ ys)
 \end{verbatim}
 
+The type above captures exactly how we would like split terms to be
+represented such that they can be transitively recombined. The
+\texttt{B} natural number index reverals at what satisfied
+input/output point a term was split at, and the term index is the
+value we are splitting. The constructor carries the two
+subterms which share \texttt{B} in a way that the resulting type can
+recombine the two via \texttt{xs ++ ys}.
 
+Given two parent terms split in such a way, crossover needs to produce
+two offspring that swap the subterms in the splits. Functions for both
+of these swaps can be straightforwardly defined.
+
+\begin{verbatim}
+  swap₁ : {A B C : ℕ} {xs ys : Term A C} →
+    Split B xs → Split B ys → Term A C
+  swap₁ (xs ++' ys) (as ++' bs) = xs ++ bs
+
+  swap₂ : {A B C : ℕ} {xs ys : Term A C} →
+    Split B xs → Split B ys → Term A C
+  swap₂ (xs ++' ys) (as ++' bs) = as ++ ys
+\end{verbatim}
 
 \section{Old DTP Intro}
 
