@@ -527,6 +527,53 @@ of these swaps can be straightforwardly defined.
   swap₂ (xs ++' ys) (as ++' bs) = as ++ ys
 \end{verbatim}
 
+\subsubsection{Dependent Pairs}
+
+Given some term and a natural number, we would like to split the term
+at the point indexed into. This function will be the key component of
+determining the split in the female parent of
+crossover. \texttt{Split} is specific enough to tell us the shared
+\texttt{B} between the two subterms. However, for the purposes of this
+function we do not care what \texttt{B} is (actually, we would like
+the function to tell us what it is.)
+
+\begin{verbatim}
+  data Σ (A : Set) (B : A → Set) : Set where
+    _,_ : (x : A) → B x → Σ A B
+\end{verbatim}
+
+A non-dependent pair, or tuple, carries 2 values of arbitrary
+types. In the dependent version of pairs, the \textit{value} in the first
+component is used to determine the \textit{type} in the second
+component. One dependently typed programming technique is using a
+dependent pair to hide the index type of a return value when you don't
+know or care what it will be. For example, sometimes we would merely
+like to write down a vector value and have the compiler figure out the
+unique possible length.
+
+\begin{verbatim}
+  specifiedLength : Σ ℕ (λ n → Vec Bool n)
+  specifiedLength = 3 , true :: false :: true :: []
+
+  discoveredLength : Σ ℕ (λ n → Vec Bool n)
+  discoveredLength = _ , true :: false :: true :: []
+\end{verbatim}
+
+Note the use of anonymous function in the type. Remember that in DTP
+we can do anything at the type level that we can do at the value
+level, including the use of our ultimate mascot $\lambda$. With this
+dependent pair trick up our sleeves, we can define \texttt{split}.
+
+\begin{verbatim}
+  split : {A C : ℕ} (n : ℕ) (xs : Term A C) →
+    Σ ℕ (λ B → Split B xs)
+  split zero xs = _ , [] ++' xs
+  split (suc n) [] = _ , [] ++' []
+  split (suc n) (x :: xs) with split n xs
+  split (suc A) (x :: ._) | _ , xs ++' ys =
+    _ , (x :: xs) ++' ys
+\end{verbatim}
+
 \section{Old DTP Intro}
 
 We will begin with a slow introduction to dependent types by
