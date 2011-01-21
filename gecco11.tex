@@ -322,7 +322,8 @@ the lookup index type and the vector.
     zero : {n : ℕ} → Fin (suc n)
     suc  : {n : ℕ} → Fin n → Fin (suc n)
 
-  lookup : ∀ {A n} → Fin n → Vec A n → A
+  lookup : {A : Set} {n : ℕ} →
+    Fin n → Vec A n → A
   lookup    zero (x :: xs) = x
   lookup (suc i) (x :: xs) = lookup i xs
 \end{verbatim}
@@ -421,6 +422,72 @@ whatever unique typing constraints make sense. In other words, our two
 informal assumptions of a unifying \texttt{n} variable that is shared
 between the input and output functions is formally captured in the
 cons case of the term type.
+
+\begin{verbatim}
+  identity : Term 1 1
+  identity = not :: not :: []
+
+  anotherTrue : Term 0 1
+  anotherTrue = not :: not :: true :: []
+
+  nand : Term 2 1
+  nand = not :: and :: []
+
+  andand : Term 3 1
+  andand = and :: and :: []
+\end{verbatim}
+
+Review the new types of the terms presented earlier, as well as a new
+term. \texttt{andand} is an example of how \texttt{Term} correctly
+composes input/output requirements. The first \texttt{and} requires
+two arguments and produces one, which the second can use. Hence, the
+compound term requires a total of three inputs and will produce one
+output.
+
+Notice that in this representation one syntatic representation of a
+term can act as the value for many different types. Specifically, what
+can change is the original number of arguments on the stack.
+
+\begin{verbatim}
+  bc : Term 2 1
+  bc = and :: []
+
+  ab : Term 3 2
+  ab = and :: []
+\end{verbatim}
+
+\subsection{Transitive Append}
+
+When writing genetic operators, for example
+\cite{tchernev:forthcross}'s 1-point crossover, we need to take
+subsections of different terms and recombine them in a safe
+matter. Tchernev points out that we need to split parent terms at a
+point of equal output stacks in order for a safe recombination. But,
+what is the criterion for a safe append of two arbitrary terms after
+they have been split in this manner?
+
+As was hinted at in the variable names of the previous example, a safe
+append illustrates the transitive property.
+
+\begin{verbatim}
+  _++_ : {A B C : ℕ} →
+    Term B C → Term A B →
+    Term A C
+  [] ++ ys = ys
+  (x :: xs) ++ ys = x :: (xs ++ ys)
+
+  abc : Term 3 1
+  abc = bc ++ ab
+\end{verbatim}
+
+If an attempt is made to append two terms whose inputs/output
+requirements do not satisfy each other, a compile error will
+occur. Using a function with a such an informative type gives a high
+degree of confidence that we are doing the right thing when usedi
+inside another function such as crossover. In fact, as we shall soon
+see the type of this function gives us more than just confidence.
+
+
 
 \section{Blah}
 
