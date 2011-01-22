@@ -16,3 +16,5 @@ Default
 *.log
 *.synctex.gz
 *.out
+*.bbl
+*.blg
