@@ -458,6 +458,41 @@ can change is the original number of arguments on the stack.
   ab = and :: []
 \end{verbatim}
 
+\section{Total Evaluation}
+
+When comparing relative performance between evolved terms, one needs
+to evaluate them against some fitness function. We will proceed to write
+an evaluation function for the example language we have used so far.
+
+In Agda any function the user writes must be total. For Agda's
+purposes, totality constitutes passing termination and coverage checks
+at compile time. Termination checking ensures that recursive calls are
+made with data that structurally decreases. Coverage checking ensures
+that a function handles every valid case for each of its arguments.
+
+\begin{verbatim}
+  eval : {A C : ℕ} → Term A C → Vec Bool A →
+    Vec Bool C
+  eval [] as = as
+  eval (true :: xs) as = true :: eval xs as
+  eval (false :: xs) as = false :: eval xs as
+  eval (not :: xs) as with eval xs as
+  ... | c :: cs = ¬ c :: cs
+  eval (and :: xs) as with eval xs as
+  ... | c₂ :: c₁ :: cs = (c₁ ∧ c₂) :: cs
+  eval (or :: xs) as with eval xs as
+  ... | c₂ :: c₁ :: cs = (c₁ ∨ c₂) :: cs
+\end{verbatim}
+
+In addition to the term to evaluate, \texttt{eval} takes a vector of
+booleans \footnote{Do not get confused by the true/false constructors
+  of the \texttt{Bool} type and \texttt{Term} types. Agda can
+  differentiate between overloaded constructor names according to the
+  type they refer to in context.}
+whose length \texttt{A} is equal to the number of inputs the
+term expects. The return type of the function is another vector of
+bools \texttt{C}, matching the evaluated term's output.
+
 \section{Transitive Operations}
 
 When writing genetic operators, for example
