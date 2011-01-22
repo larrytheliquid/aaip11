@@ -36,13 +36,15 @@ Genetic Programming (GP) as a field began by using the meta-language
 to the easy manipulation of parse trees and built-in evaluation
 function over them. Naturally, a lot of GP's early and prominent work
 was dominated by dynamic language implementations, clever avoidance of
-\cite{to:do} type-issues during evolution, and tree-based program terms
+type-issues during evolution, and tree-based program terms
 for the algorithm to operate on.
 
 Since then, there has been work on using type-awareness to inform the
-different stages of the algorithm \cite{to:do} (population generation,
-genetic operators, etc.) There has also been plenty of separate work
-on alternative representations (linear, graph, grammar-based, etc.)
+different stages of the algorithm
+\cite{montana:strongtree, tchernev:crossmethods}  
+(population generation, genetic operators, etc.) There has also been
+plenty of separate work on alternative representations (linear, graph,
+grammar-based, etc.) 
 
 Significant advances have been made investigating how variations of
 the basic algorithm affect properties like search space, fitness
@@ -75,7 +77,7 @@ In harmony with this goal is making sure evolution is used only where
 necessary, rather than taking a swiss army knife approach of forcing
 evolution solve all aspects of a problem. One
 related GP problem is that of ill-formed programs. Typical
-dynamic-type inspired solutions either \cite{koza:onlygood}, assign a minimal fitness to
+dynamic-type inspired solutions either \cite{koza:92}, assign a minimal fitness to
 ill-formed programs, or treat failing operations as
 NOOP's
 \footnote{In a stack-based language, a runtime failure can act like a
@@ -101,7 +103,7 @@ methods for type-safe linear crossover can be competitive with those
 of subtree crossover. 1-dimensional flat structures such as lists are
 intuitively simpler than nested trees, although more technically this
 can be understood as operations on lists forming a monoid
-\cite{to:do}. Additionally, functions operating on list monads have
+\cite{spivey:catlists}. Additionally, functions operating on list monads have
 several well-understood and mathematically-backed results in the
 domain of permutations that are useful in a GP setting.
 
@@ -112,7 +114,7 @@ evolution. A programming language that is capable of succinctly
 expressing our desired properties, and has the semantics to be able to
 check them, is desireable. For basic hygene, we want to use a purely
 functional language (the most popular example being Haskell
-\cite{to:do}). The complexity of algorithm requires several
+\cite{spj:haskell}). The complexity of algorithm requires several
 interacting pieces, decisions depending on randomness, the
 manipulation of terms, and updating a population. An implementation in
 an impure language leaves many an opportunity for mistakes in the
@@ -125,7 +127,7 @@ Secondly, the typical GP program must deal with things like catching
 exceptions produced by failing programs, and assigning them low
 fitness. The random generation of programs can also produce programs
 that fail to terminate or take a long time to terminate. The halting
-problem \cite{to:do} tells us that we cannot distinguish between the
+problem tells us that we cannot distinguish between the
 two, but it would useful to handle the two cases differently
 (e.g. giving a low fitness to the former but allowing the latter to
 complete running). Although though Haskell is a pure language, it is
@@ -160,7 +162,7 @@ or otherwise express the kind of data that a function operates on.
 
 \section{Stack Languages}
 
-In stack-based languages \cite{to:do} there is no
+In stack-based languages \cite{kelly:forth} there is no
 distinction between values and functions. Instead, each syntactic
 element is referred to as a "word". Every word can be modeled as a
 function which takes the previous stack state as a value and returns
@@ -193,7 +195,7 @@ For purposes of pedagogy, we will first consider how to represent a
 population of terms/programs in a typical non-dependent functional
 programming style. Thereafter, we will extend the example to use
 dependent types.
-\footnote{For a proper tutorial on dependently typed programming in Agda, see \cite{to:do}}
+\footnote{For a proper tutorial on dependently typed programming in Agda, see \cite{norell:agdatut}}
 
 \subsection{Non-Dependent Types}
 
@@ -670,10 +672,6 @@ elitism, or constant-size updating \cite{montana:strongtree}). We
 intend that the size of the population in the first generation, the
 subsequent generations, and the final generations remains
 constant.
-
-%% ample opportunity for giving credit of strange behavior (such as
-%% "epihanies" \cite{to:do}) to evolution, when really the search space
-%% was fundamentally altered at that point.
 
 As such, we will first consider the introductory task of representing
 a constant-size population as a parameter and return type of a
