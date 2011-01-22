@@ -433,12 +433,12 @@ cons case of the term type.
   nand : Term 2 1
   nand = not :: and :: []
 
-  andand : Term 3 1
-  andand = and :: and :: []
+  andAnd : Term 3 1
+  andAnd = and :: and :: []
 \end{verbatim}
 
 Review the new types of the terms presented earlier, as well as a new
-term. \texttt{andand} is an example of how \texttt{Term} correctly
+term. \texttt{andAnd} is an example of how \texttt{Term} correctly
 composes input/output requirements. The first \texttt{and} requires
 two arguments and produces one, which the second can use. Hence, the
 compound term requires a total of three inputs and will produce one
@@ -507,7 +507,7 @@ in \cite{oury:tpop}.
 
 The type above captures exactly how we would like split terms to be
 represented such that they can be transitively recombined. The
-\texttt{B} natural number index reverals at what satisfied
+\texttt{B} natural number index reveals the satisfied
 input/output point a term was split at, and the term index is the
 value we are splitting. The constructor carries the two
 subterms which share \texttt{B} in a way that the resulting type can
@@ -559,7 +559,7 @@ unique possible length.
   discoveredLength = _ , true :: false :: true :: []
 \end{verbatim}
 
-Note the use of anonymous function in the type. Remember that in DTP
+Note the use of an anonymous function in the type. Remember that in DTP
 we can do anything at the type level that we can do at the value
 level, including the use of our ultimate mascot $\lambda$. With this
 dependent pair trick up our sleeves, we can define \texttt{split}.
@@ -567,12 +567,96 @@ dependent pair trick up our sleeves, we can define \texttt{split}.
 \begin{verbatim}
   split : {A C : ℕ} (n : ℕ) (xs : Term A C) →
     Σ ℕ (λ B → Split B xs)
-  split zero xs = _ , [] ++' xs
+  split   zero  xs = _ , [] ++' xs
   split (suc n) [] = _ , [] ++' []
   split (suc n) (x :: xs) with split n xs
   split (suc A) (x :: ._) | _ , xs ++' ys =
     _ , (x :: xs) ++' ys
 \end{verbatim}
+
+\section{Type-Preserving Crossover}
+
+With the types and functions already defined, being able to define a
+crossover function that takes two parent terms of the same type and
+returns two child terms of the same type is not far away.
+
+\subsection{Split Female}
+
+For the first step in 1-point crossover we need to split the first
+parent (referred to here as the female) at some random point. Thus, we
+need to know the length of the female, then choose a random number
+bounded by that length.
+
+\begin{verbatim}
+  length : {A C : ℕ} → Term A C → ℕ
+  length [] = 0
+  length (x :: xs) = suc (length xs)
+
+  splitFemale : {A C : ℕ} → (xs : Term A C) → ℕ →
+    Σ ℕ (λ B → Split B xs)
+  splitFemale xs rand with rand mod (suc (length xs))
+  ... | i = split (toℕ i) xs
+\end{verbatim}
+
+Note that we use a \texttt{\_mod\_} function which returns a finite set
+representing the modulus of its two arguments. The definition of this
+function can be found in the supplementary source code, as it is not
+particularly relevant to what we would like to explain.
+
+\subsection{Split Male}
+
+Based upon the \texttt{B} index at which the female was split, the
+male split can be determined by choosing a random member of all
+possible compatible splits.
+
+\begin{verbatim}
+  splits : {A C : ℕ} (n B : ℕ) (xs : Term A C) →
+    Σ ℕ (λ n → Vec (Split B xs) n)
+  splits zero B xs with split zero xs
+  ... | B' , ys with B =? B'
+  ... | yes p rewrite p = _ , ys :: []
+  ... | no p = _ , []
+  splits (suc n) B xs with split (suc n) xs
+  ... | B' , ys with B =? B' | splits n B xs
+  ... | yes p | _ , yss rewrite p = _ , ys :: yss
+  ... | no p | _ , yss = _ , yss
+\end{verbatim}
+
+%% TODO: explain =? and rewrite
+%% and reference back to cliffhanger
+
+When we split the male parent we choose a random member of the
+type-correct splits. However, this function returns a value of type
+\texttt{Maybe}, so that it may return \texttt{nothing} if there is no
+compatible split at all.
+
+\begin{verbatim}
+  splitMale : {A C : ℕ} (xs : Term A C) →
+    (B rand : ℕ) → Maybe (Split B xs)
+  splitMale xs B rand
+    with splits (length xs) B xs
+  ... | zero , [] = nothing
+  ... | suc n , xss
+    = just (lookup (rand mod suc n) xss)
+\end{verbatim}
+
+Finally, we can write \texttt{crossover} to combine the female and
+male splits, and return both children using the \texttt{swap}s defined
+earlier.
+
+\begin{verbatim}
+  crossover : {A C : ℕ}
+    (female male : Term A C) (randF randM : ℕ) →
+    Term A C × Term A C
+  crossover female male randF randM
+    with splitFemale female randF
+  ... | B , xs with splitMale male B randM
+  ... | nothing = female , male
+  ... | just ys = swap₁ xs ys , swap₂ xs ys
+\end{verbatim}
+
+In the case where no valid male swap existed, we return the original
+two parents.
 
 \section{Old DTP Intro}
 
