@@ -719,8 +719,42 @@ possible compatible splits.
   ... | no p | _ , yss = _ , yss
 \end{verbatim}
 
-%% TODO: explain =? and rewrite
-%% and reference back to cliffhanger
+\subsubsection{Propositional Equality}
+
+In the definition of \texttt{splits} we simultaneously split at all
+possible positions of the male term, and filter out ones that would
+not be compatible with respect to transitively appending them back
+together.
+
+It is intuitive that in the algorithm we must compare the \texttt{B}
+that we are splitting on and the \texttt{B'} in the current
+split. Normally a comparison of two terms is performed by passing them
+to a function that returns a boolean value, then doing something
+different for the true and false cases. While a boolean value is
+enough to convince a certain kind of person that action should be
+taken, it is not enough to convince a type system.
+
+Consider the \texttt{yes p} case (analogous to a typical \texttt{true}
+case) within the \texttt{splits zero} case. We would like to return
+our freshly split \texttt{ys} value, but the type checker won't have
+it. Why not? If we look at the type signature of \texttt{splits}, it
+requires a \texttt{Split B xs}, but \texttt{ys} is a \texttt{Split B'
+  xs}. Luckily the \texttt{=?} comparison function returned something
+more than just a boolean, but a constructive proof that both compared
+values were in fact the same. We pass the proof \texttt{p} (pattern
+matched as \texttt{yes p}) to Agda's \texttt{rewrite} keyword to
+convince the type checker that \texttt{ys : Split B' xs} is acceptable
+because \texttt{B ≡ B'}.
+
+What should you take away from all this? Mainly that the type checker
+needs to be convinced with formal constructive evidence to enforce
+invariants you prescribe. This evidence is in practice easy to work
+with, as it is made of ordinary dependent types like everything
+else. The payoff is that confidence that the burden of verifying that
+a program behaves as it is expected to is lifted from the programmer's
+shoulders and onto the type checker's.
+
+\subsubsection{Defining Crossover}
 
 When we split the male parent we choose a random member of the
 type-correct splits. However, this function returns a value of type
@@ -736,6 +770,11 @@ compatible split at all.
   ... | suc n , xss
     = just (lookup (rand mod suc n) xss)
 \end{verbatim}
+
+Note that the proof complexity in the implementation of
+\texttt{splits} is isolated. Once we have a function definition that
+typechecks, we can freely use it without having to do any work over
+again.
 
 Finally, we can write \texttt{crossover} to combine the female and
 male splits, and return both children using the \texttt{swap}s defined
@@ -755,66 +794,7 @@ earlier.
 In the case where no valid male swap existed, we return the original
 two parents.
 
-\section{Old DTP Intro}
-
-We will begin with a slow introduction to dependent types by
-considering the size of the population as a constant-size list
-throughout all generations of program evolution. For example, consider
-a GP program run that uses an population of size 200. During each
-generation, the previous population must be used to generate the next
-in some fashion (e.g. genetic operations after tournament selection,
-elitism, or constant-size updating \cite{montana:strongtree}). We
-intend that the size of the population in the first generation, the
-subsequent generations, and the final generations remains
-constant.
-
-As such, we will first consider the introductory task of representing
-a constant-size population as a parameter and return type of a
-black-box function which calculates the next generation from the
-previous. Because the language semantics already assure us purity and
-totality, let us focus our attention on the type signature of such a
-function to see what else we can know at compile time rather than
-looking at runtime-specific implementation details.
-
-%% Since 
-
-We can see in TODO
-that we have a polymorphic function from a list of some arbitrary type
-to another list of the same type. Statically, however, the length of
-either of lists is not known and could change arbitrarily. Compare
-this with the type signature of the function in TODO which uses the
-type of vectors rathers than lists. A vector is like a list, but has
-an additional type-level parameter (called an "index"). This parameter
-is a natural number, and represents the length of the list. Just as
-the polymorphic parameter \texttt{A} ensures that the type of lists/vectors
-does not vary between the input and output, the natural number
-parameter \texttt{n} ensures that the length of the population remains
-constant.
-
-For greater understanding, we will show how the types of lists and
-vectors are defined, and how their values can be used and misused. In
-TODO we see the that a constructively defined list with an empty case
-with no arguments, and a "cons" case which takes an argument of
-polymorphic type \texttt{A}, as well as a previous list of the same
-type as the resulting list. Note that Agda supports arbitrary unicode
-characters such as \texttt{::} as identifiers, and underscores to
-indicate where arguments go for prefix/infix/mixfix constructors or
-functions. If we compare \texttt{List} with \texttt{Vec}, we notice
-the aforementioned additional natural number index parameter. The
-empty case is defined to be of length zero and, and the cons case
-takes a vector of arbitrary length as an argument, and returns a
-vector whose length is one greater (the successor). In essence, we
-have a definition of vectors that contains their length merely by
-construction. As such, one can be sure when speaking about vectors
-that the natural number index indeed represents length, as there is no
-way of constructing the term otherwise. TODO is simple and concise,
-making it understandable and giving us confidence in the
-length-preserving invariant we would like to enforce when generating
-the population for the next generation.
-
-
 \section{Conclusion}
-
 
 \bibliographystyle{abbrv}
 \bibliography{gecco11}
