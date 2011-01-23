@@ -491,7 +491,66 @@ booleans \footnote{Do not get confused by the true/false constructors
   type they refer to in context.}
 whose length \texttt{A} is equal to the number of inputs the
 term expects. The return type of the function is another vector of
-bools \texttt{C}, matching the evaluated term's output.
+bools \texttt{C}, matching the evaluated term's output. Both of these
+properties of course enforced statically, giving more assurance that
+are algorithm is doing what we expect.
+
+\section{Non-Trivial Languages}
+
+The representation used can be extended to more complex languages,
+including operations that use the entire current stack as the input
+rather than just one or two top elements.
+
+\begin{verbatim}
+  data Word : Set where
+    dup swap pop square : Word
+
+  In : Word → ℕ → ℕ
+  In dup    n = 1 + n
+  In swap   n = 2 + n
+  In pop    n = 1 + n
+  In square n =     n
+
+  Out : Word → ℕ → ℕ
+  Out dup    n = 2 + n
+  Out swap   n = 2 + n
+  Out pop    n =     n
+  Out square n = n * n
+\end{verbatim}
+
+Operation \texttt{dup} requires a top element to be present and
+duplicates it, \texttt{swap} requires two elements to be present and
+pushes them back on in swapped order (keeping the net stack size the
+same), and \texttt{pop} requires one element to be on the stack and
+removes it. Those three should be familiar to programmers of stack
+languages, but \texttt{square} is a bit more interesting. It requires
+any number of elements to be on the stack. It proceeds to pop all of
+them, then pushes enough copies of the popped stack to equal the
+square of its original size. This manifests itself as the value
+\texttt{n * n} for the \texttt{Out} case of \texttt{square}.
+
+\begin{verbatim}
+  eval : {A C : ℕ} → Term A C → Vec Bool A →
+    Vec Bool C
+  eval (dup :: xs) as with eval xs as
+  ... | c :: cs = c :: c :: cs
+  eval (swap :: xs) as with eval xs as
+  ... | c₂ :: c₁ :: cs = c₁ :: c₂ :: cs
+  eval (pop :: xs) as with eval xs as
+  ... | c :: cs = cs
+  eval (_::_ {n = n} square xs) as with eval xs as
+  ... | cs = concat (replicate {n = n} cs)
+\end{verbatim}
+
+The only case here worth drawing attention to is that of
+\texttt{square}, which \texttt{replicate}s the output stack n times
+and \texttt{concat}s into a single term.
+\footnote{For dependently typed programmers, it should be pointed out
+  that our representation does not run into termination issues when
+  defining semantics for operations that increase the input stack. }
+We are assured that even in the presence of somewhat complex semantics
+for terms that the resulting arity must match the input/output
+requirements declared by \texttt{In}/\texttt{Out}.
 
 \section{Transitive Operations}
 
@@ -505,8 +564,9 @@ they have been split in this manner?
 
 \subsection{Transitive Append}
 
-As was hinted at in the variable names of the previous example, a safe
-append illustrates the transitive property.
+As was hinted at in the variable names of the example at the end of
+section \textbf{Requirement-Indexed Terms}, a safe append illustrates
+the transitive property. 
 
 \begin{verbatim}
   _++_ : {A B C : ℕ} →
