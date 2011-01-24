@@ -55,163 +55,32 @@ non-trivial but verified and simple to understand GP implementation.
 Flat linear structures are conceptually simpler than nested trees and
 intimately familiar to functional programmers, yet still provide
 competitive evolutionary results \cite{tchernev:crossmethods} compared
-to trees. As such, we will concentrate on a developing a stack-based
+to trees. As such, we will concentrate on developing a stack-based
 genetic programming algorithm.
 
 After a general overview of stack languages and dependent types, the
 structure of the paper will follow a common classification scheme for
 GP:
 \begin{itemize}
-\item{\textbf{parameters:}} Starting with an non-dependently typed
+\item{\textbf{parameters:}} Starting with a non-dependently typed
   representation, we will see how to use standard affair dependent
   typing to ensure the population size parameter is adhered to.
-\item{\textbf{representation:}} Next we will see how to use precise
-  dependent types to encode arity and type information for candidate
-  programs.
+\item{\textbf{representation:}} Next we will see how to modify our
+  term representation to use precise dependent types, encoding arity
+  information in the types of candidate programs.
 \item{\textbf{evaluation function:}} Taking advantage of the host
   language's totality requirement, we'll see how easy it is to write
-  an evaluation function for terms that is assured to terminate and
-  not diverge.
-\item{\textbf{genetic operators:}} Finally we will see what types and
-  functions are necessary to ensure that only type-safe programs ever
-  appear in the population after crossover.
+  an evaluation function for evolved terms that is assured to
+  terminate and not otherwise diverge.
+\item{\textbf{genetic operators:}} Finally we will see how to encode
+  the property of transitivity into the types of functions related to
+  crossover, ensuring that ill-typed programs never enter the
+  population.
 \item{\textbf{initialization procedure:}} Due to space constraints, we
-  will omit the initialization function (although it can be found in
-  the referenced implementation).
+  will omit the initialization function.
 \end{itemize}
 
-\section{Introduction}
-
-Genetic Programming (GP) as a field began by using the meta-language
-(Lisp) to directly represent candidate solutions for a problem. This is primarily due
-to the easy manipulation of parse trees and built-in evaluation
-function over them. Naturally, a lot of GP's early and prominent work
-was dominated by dynamic language implementations, clever avoidance of
-type-issues during evolution, and tree-based program terms
-for the algorithm to operate on.
-
-Since then, there has been work on using type-awareness to inform the
-different stages of the algorithm
-\cite{montana:strongtree, tchernev:crossmethods}  
-(population generation, genetic operators, etc.) There has also been
-plenty of separate work on alternative representations (linear, graph,
-grammar-based, etc.) 
-
-Significant advances have been made investigating how variations of
-the basic algorithm affect properties like search space, fitness
-gradients, and overall performance. One area that has not seen as much
-exploration is the correctness of the implementation of a GP
-algorithm. GP involves significant complexity, as it must maintain a
-population of program terms, update the population across generations
-with term-manipulating genetic operators, evaluation of individuals,
-selection, TODO.
-
-The most frequently used method to compare the performance of a
-particular GP implementation is to compute basic statistics about
-things like fitness scores, size of terms, TODO and see how they
-change as algorithm stages progress. This often takes the form of
-looking at such tabulated, graphed, or otherwise visualized data and
-drawing conclusions about how evolution must have done this or that to
-explain interesting portions of the data. Seeing what evolution is
-buying us is, after all, the point.
-
-That leads us to a problem that we would like to address. Namely,
-being sure that the behavior of the algorithm is what we expect. Given
-the complexity of these algorithsm, it would be very unfortunate,
-although not unimaginable, to have bugs in implementation that cause
-certain phenomena to occur in the data analyzed in the end. We would
-like to avoid researchers drawing conclusions from implementation
-mistakes and attributing and propagating evolutionary explanations for
-them.
-
-In harmony with this goal is making sure evolution is used only where
-necessary, rather than taking a swiss army knife approach of forcing
-evolution solve all aspects of a problem. One
-related GP problem is that of ill-formed programs. Typical
-dynamic-type inspired solutions either \cite{koza:92}, assign a minimal fitness to
-ill-formed programs, or treat failing operations as
-NOOP's
-\footnote{In a stack-based language, a runtime failure can act like a
-  NOOP by continuing execution with an unmodified stack state. However,
-  tree-based languages do not have a simple way to return nothing}.
-The first approach does not scale up to problems involving more
-complex types that are not related in meaningful ways for the purpose
-of conversions. The second approach puts more of a burden on evolution, and the third
-leads to bloat (a problem evolutionary algorithms already have enough
-of.)
-
-Instead, we will use static-typing inspired approaches featured in
-strongly typed GP \cite{montana:strongtree, tchernev:forthcross} that make algorithmic
-modifications to constrain the search space that evolution must
-explore. Further, to fit with our other goal of avoiding
-implementation mistakes, operating on a simple structure that still
-has ample opportunity for useful program recombination is
-desirable. Although tree structures are the most common GP term
-representation, functions designed to manipulate them are not as
-straightforward as those on list/linear structures. Tchernev
-\cite{tchernev:forthcross, tchernev:crossmethods} has shown how simple
-methods for type-safe linear crossover can be competitive with those
-of subtree crossover. 1-dimensional flat structures such as lists are
-intuitively simpler than nested trees, although more technically this
-can be understood as operations on lists forming a monoid
-\cite{spivey:catlists}. Additionally, functions operating on list monads have
-several well-understood and mathematically-backed results in the
-domain of permutations that are useful in a GP setting.
-
-In essence, we would like to come up with a list of invariants that
-the implementation of a GP algorithm should uphold in order to make us
-more confident in explanations of emergent phenomena in terms of
-evolution. A programming language that is capable of succinctly
-expressing our desired properties, and has the semantics to be able to
-check them, is desireable. For basic hygene, we want to use a purely
-functional language (the most popular example being Haskell
-\cite{spj:haskell}). The complexity of algorithm requires several
-interacting pieces, decisions depending on randomness, the
-manipulation of terms, and updating a population. An implementation in
-an impure language leaves many an opportunity for mistakes in the
-interaction of various side affecting operations. Conversely, a pure
-settings allows for a more structured, modular approach, to GP that
-explicitly represents side effects via monads. Simulation of the side
-effects in question are already mature and well-understood.
-
-Secondly, the typical GP program must deal with things like catching
-exceptions produced by failing programs, and assigning them low
-fitness. The random generation of programs can also produce programs
-that fail to terminate or take a long time to terminate. The halting
-problem tells us that we cannot distinguish between the
-two, but it would useful to handle the two cases differently
-(e.g. giving a low fitness to the former but allowing the latter to
-complete running). Although though Haskell is a pure language, it is
-also a partial language. When using a partial meta-language, it is
-possible to conflate problems having to do with exceptions and
-termination in the meta-language implementation, with those observed
-in object-language. Consequently, we seek a language that is both pure
-and total.
-
-In a certain sense, Hindley-Milner based languages that are both pure
-and total just shift errors from being classified as runtime errors to
-being classified as logic errors. This is because part of totality is
-for a function to be coverage complete in its case analysis. For
-example, a function that is designed to only work on some cases of an
-argument must wrap its output in a failure-simulating monad
-(e.g. Maybe). Enough nested functions passing around such simulated
-failure can lead to sloppy programming that fails too much in one
-place, or returns nonsense but type-correct values in
-others. Furthermore, we need to be able express more complex GP
-domain-specific invariants (such as type-correct crossover) that are
-not afforded to us by purity or totality alone. This finally leads us
-to the class of languages suitable for the task at hand, namely
-dependently typed programming languages.
-
-In addition to being pure and total, languages with dependent types
-are characterized by the property that labeled dependencies can exist
-at the type level of programs. Moreover, the typical distinction
-between the kinds of programs expressible at the level of values and
-at the level of types is no longer. In other words, arbitrarily
-complex functions can be used in type signatures in order to constrain
-or otherwise express the kind of data that a function operates on.
-
-\section{Stack Languages}
+\subsection{Stack Languages}
 
 In stack-based languages \cite{kelly:forth} there is no
 distinction between values and functions. Instead, each syntactic
@@ -221,24 +90,62 @@ the subsequent, possibly altered, state. Consider for example a
 small word language in the boolean domain, made up of \texttt{true},
 \texttt{false}, \texttt{and}, \texttt{or} , and \texttt{not}. A word
 such as \texttt{true} that would typically be considered as a value
-has no requirements on the input stack, and merely return the input
-stack plus a boolean value of true pushed on top. On the other
+has no requirements on the input stack, and merely returns the input
+stack plus a boolean value of ``true'' pushed on top. On the other
 hand, \texttt{and} requires the input stack to have at least two elements,
-which is pops off in order to push their logical conjunction
-back. It should be pointed out that unlike in tree-based grammars, a
-previously pushed value may get used by an operation later in the
-program. To reiterate, each word takes the entire global stack state
-as input and returns the entire stack state as output. TODO
+which it pops off in order to push their logical conjunction
+back.
 
 In a monotypic language, a simple static type system emerges which
-assigns to each word a natural number representing the required input
+assigns to each word a natural number representing the minimum required input
 stack length, and a second number representing the output stack
 length. A sequence of such words forms a stack program, for which an
-aggregate input/output pair can be computed. One can think of this
-pair as a number representing how large of a stack is
-\textit{consumed}, and another representing the size of the
-\textit{produced} stack... or alternatively function arity which
-indicates the change of a size-indexed global variable.
+aggregate input/output pair exists.
+
+During genetic operations such as crossover, stack programs must be
+manipulated in some manner to produce offspring for the next
+generation. \cite{tchernev:forthcross} showed how to use arity
+information related to the consumed/produced stack sizes to only
+perform crossover at points that will produce well-typed
+terms. \cite{tchernev:crossmethods} has documented many different
+approaches to do this, but for simplicity of presentation we will use
+1-point crossover from the original manuscript.
+
+\subsection{Dependent Types}
+
+Dependently typed languages have the distinguishing characteristic
+that arguments in type signatures may be assigned labels (similar to
+variable names), to be used elsewhere in type signature to declare
+\textit{dependencies} between values. This paper will use the
+dependently typed programming language Agda \cite{norell:agdatut} for
+all of its examples, but it should be possible to translate examples
+to similar languages such as Epigram \cite{to:do} or Idris
+\cite{to:do}.
+
+Agda is a purely functional language (the most popular example being
+\cite{spj:haskell}), in which side effecting code is made explicit via
+types. This has the effect of making the implementation of pure algorithms
+more understandable, and complicated reasoning required to trace side
+effects can be isolated to a small corner of the final program.
+
+At compile time, Agda programs must also pass two checks to prove their
+totality. Termination checking is accomplished by checking
+for structurally decreasing recursive calls. Coverage checking is
+accomplished by requiring that every type-correct value of a function's
+arguments is accounted for in the function's definition.
+Consequently, Agda programs do not fail to terminate
+\footnote{Although Agda programs can succeed to not terminate via
+  coinductive definition and corecursion, if controlled
+  non-termination is what we want.}
+or crash due to unexpected input. This meta-theoretical property of
+our language is convenient if we wanted to model evolution of
+partially defined programs, without having to worry about
+misinterpreting partiality in the host language.
+
+Finally, as a rule of thumb an Agda programmer forgets the traditional
+distinction of what is computable at compile time versus runtime. In
+particular, any ``value level'' function can be used at the type level
+as well.
 
 \section{Intro to Dependent Types}
 
