@@ -54,8 +54,7 @@ non-trivial but verified and simple to understand GP implementation.
 
 Flat linear structures are conceptually simpler than nested trees and
 intimately familiar to functional programmers, yet still provide
-competitive evolutionary results compared to trees
-\cite{tchernev:crossmethods}.
+competitive evolutionary results compared to tree \cite{tchernev:crossmethods}.
 As such, we will concentrate on developing a stack-based
 genetic programming algorithm.
 
@@ -82,7 +81,7 @@ GP:
 
 \subsection{Stack Languages}
 
-In stack-based languages such as Forth\cite{kelly:forth} there is no
+In stack-based languages such as Forth \cite{kelly:forth} there is no
 distinction between values and functions. Instead, each syntactic
 element is referred to as a ``word''. Every word can be modeled as a
 function which takes the previous stack state as a value and returns
@@ -104,10 +103,10 @@ program, for which an aggregate input/output pair exists.
 
 During genetic operations such as crossover, stack programs must be
 manipulated in some manner to produce offspring for the next
-generation. Tchnernev\cite{tchernev:forthcross} showed how to use arity
+generation. Tchnernev \cite{tchernev:forthcross} showed how to use arity
 information related to the consumed/produced stack sizes to only
 perform crossover at points that will produce well-typed
-terms. Tchnernev\cite{tchernev:crossmethods} has documented many different
+terms. Tchnernev \cite{tchernev:crossmethods} has documented many different
 approaches to do this, but for simplicity of presentation we will use
 1-point crossover.
 
@@ -117,13 +116,13 @@ Dependently typed languages have the distinguishing characteristic
 that arguments in type signatures may be assigned labels (similar to
 variable names), to be used elsewhere in type signature to declare
 \textit{dependencies} between values. This paper will use the
-dependently typed programming language Agda\cite{norell:agdatut} for
+dependently typed programming language Agda \cite{norell:agdatut} for
 all of its examples, but it should be possible to translate examples
-to similar languages such as Epigram\cite{mcbride:epigram} or
-Idris\cite{brady:idris}.
+to similar languages such as Epigram \cite{mcbride:epigram} or
+Idris \cite{brady:idris}.
 
 Agda is a purely functional language (the most popular example being
-Haskell\cite{spj:haskell}), in which side effecting code is made explicit via
+Haskell \cite{spj:haskell}), in which side effecting code is made explicit via
 types. This has the effect of making the implementation of pure algorithms
 more understandable, and complicated reasoning required to trace side
 effects can be isolated to a small corner of the final program.
@@ -514,7 +513,7 @@ requirements declared by \texttt{In}/\texttt{Out}.
 \section{Genetic Operators}
 
 When writing genetic operators, for example
-Tchnernev's\cite{tchernev:forthcross} 1-point crossover, we need to take
+Tchnernev's \cite{tchernev:forthcross} 1-point crossover, we need to take
 subsections of different terms and recombine them in a safe
 matter. Tchernev points out that we need to split parent terms at a
 point of equal output stacks to achieve safe recombination. But,
