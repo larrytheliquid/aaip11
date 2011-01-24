@@ -749,6 +749,19 @@ two parents.
 
 \section{Conclusion}
 
+Dependent types can be used to enforce desired invariants by using
+informative data types and function type signatures. We have shown
+some basics for creating a verified stack-based GP implementation
+using type-safe 1-point crossover.
+
+By building on a verified base, more complex GP algorithms can be
+created, and evolutionary data can be analyzed with much greater
+confidence that implementation bugs did not affect GP run behavior.
+
+Hopefully the examples presented herein can serve as a template to
+assist authors in encoding invariants for their particular flavors of
+GP within the context of dependently typed programming.
+
 \bibliographystyle{abbrv}
 \bibliography{gecco11}
 
