@@ -45,6 +45,43 @@ to GP run phenomena by using a verified implementation.
 
 \section{Introduction}
 
+While the earliest work in Genetic Programming used tree structures as
+candidate solutions to a problem, many alternative representations
+have been developed since (linear, graph, grammar-based, etc). The
+goal of this work is not to come up with a novel GP algorithm with
+respect to evolutionary performance, but rather give an example of a
+non-trivial but verified and simple to understand GP implementation.
+
+Flat linear structures are conceptually simpler than nested trees and
+intimately familiar to functional programmers, yet still provide
+competitive evolutionary results \cite{tchernev:crossmethods} compared
+to trees. As such, we will concentrate on a developing a stack-based
+genetic programming algorithm.
+
+After a general overview of stack languages and dependent types, the
+structure of the paper will follow a common classification scheme for
+GP:
+\begin{itemize}
+\item{\textbf{parameters:}} Starting with an non-dependently typed
+  representation, we will see how to use standard affair dependent
+  typing to ensure the population size parameter is adhered to.
+\item{\textbf{representation:}} Next we will see how to use precise
+  dependent types to encode arity and type information for candidate
+  programs.
+\item{\textbf{evaluation function:}} Taking advantage of the host
+  language's totality requirement, we'll see how easy it is to write
+  an evaluation function for terms that is assured to terminate and
+  not diverge.
+\item{\textbf{genetic operators:}} Finally we will see what types and
+  functions are necessary to ensure that only type-safe programs ever
+  appear in the population after crossover.
+\item{\textbf{initialization procedure:}} Due to space constraints, we
+  will omit the initialization function (although it can be found in
+  the referenced implementation).
+\end{itemize}
+
+\section{Introduction}
+
 Genetic Programming (GP) as a field began by using the meta-language
 (Lisp) to directly represent candidate solutions for a problem. This is primarily due
 to the easy manipulation of parse trees and built-in evaluation
