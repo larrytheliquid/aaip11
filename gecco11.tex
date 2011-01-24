@@ -96,11 +96,11 @@ hand, \texttt{and} requires the input stack to have at least two elements,
 which it pops off in order to push their logical conjunction
 back.
 
-In a monotypic language, a simple static type system emerges which
-assigns to each word a natural number representing the minimum required input
-stack length, and a second number representing the output stack
-length. A sequence of such words forms a stack program, for which an
-aggregate input/output pair exists.
+For monotypic languages like our example, a simple typing rules
+emerge which assign to each word a natural number representing the
+minimum required input stack length, and a second number representing
+the output stack length. A sequence of such words forms a stack
+program, for which an aggregate input/output pair exists.
 
 During genetic operations such as crossover, stack programs must be
 manipulated in some manner to produce offspring for the next
@@ -109,7 +109,7 @@ information related to the consumed/produced stack sizes to only
 perform crossover at points that will produce well-typed
 terms. Tchnernev\cite{tchernev:crossmethods} has documented many different
 approaches to do this, but for simplicity of presentation we will use
-1-point crossover from the original manuscript.
+1-point crossover.
 
 \subsection{Dependent Types}
 
@@ -128,7 +128,7 @@ types. This has the effect of making the implementation of pure algorithms
 more understandable, and complicated reasoning required to trace side
 effects can be isolated to a small corner of the final program.
 
-At compile time, Agda programs must also pass two checks to prove their
+At compile time, Agda programs must pass two checks to prove their
 totality. Termination checking is accomplished by checking
 for structurally decreasing recursive calls. Coverage checking is
 accomplished by requiring that every type-correct value of a function's
@@ -139,8 +139,8 @@ Consequently, Agda programs do not fail to terminate
   non-termination is what we want.}
 or crash due to unexpected input. This meta-theoretical property of
 our language is convenient if we wanted to model evolution of
-partially defined programs, without having to worry about
-misinterpreting partiality in the host language.
+partially defined programs, without having to worry confusing object
+language partiality with host language partiality.
 
 Finally, as a rule of thumb an Agda programmer forgets the traditional
 distinction between what can be computed at compile time versus runtime. In
@@ -153,12 +153,12 @@ For purposes of pedagogy, we will first consider how to represent a
 population of terms/programs in a typical non-dependent functional
 programming style. Thereafter, we will extend the example to use
 dependent types.
-\footnote{For a proper tutorial on dependently typed programming in Agda, see \cite{norell:agdatut}}
+\footnote{For a complete and proper tutorial on dependently typed programming in Agda, see \cite{norell:agdatut}}
 
 \subsection{Population List}
 
-First let's create a new type representing the possible words for an
-to be used for some evolutionary problem.
+First let's create a new type representing the possible words to be
+used for some evolutionary problem.
 
 \begin{verbatim}
   data Word : Set where
@@ -331,9 +331,10 @@ Both of these functions really just take a word, a natural number, and
 return a natural number. There is nothing special about them that
 enforces type constraints in a clever way. But, as we are being
 informal let us pretend for a moment that two special properties exist
-for these functions. The \texttt{In} function declares what the input
-requirements are on the current stack state for each word.
+for these functions.
 
+The \texttt{In} function declares what the input
+requirements are on the current stack state for each word.
 Thus, the first property we will pretend to exist is that the natural number
 parameter is a special implicit variable that unifies with whatever
 other else we require in the return value. As such, \texttt{true} has
@@ -342,7 +343,7 @@ no input requirements whatsoever, and the stack state can be any
 should at least be of size two, but the \texttt{n} is free to unify
 with more inputs that \texttt{and} will ignore.
 
-The second imagined property is that the \texttt{n} between the input
+The second imagined property is that the \texttt{n} in the input
 and output functions shall be one and the same. Hence, for
 \texttt{true} the output stack shall be whatever the input stack was,
 plus one value. Pay special attention to \texttt{and}, as it
@@ -405,25 +406,28 @@ two arguments and produces one, which the second can use. Hence, the
 compound term requires a total of three inputs and will produce one
 output.
 
-Notice that in this representation one syntatic representation of a
-term can act as the value for many different types. Specifically, what
-can change is the original number of arguments on the stack.
+Notice that one syntatic representation of a term can act as the value
+for many different types. Specifically, what can change is the
+original number of arguments on the stack.
 
 \begin{verbatim}
-  bc : Term 2 1
-  bc = and :: []
+  nand : Term 6 5
+  nand = not :: and :: []
 
-  ab : Term 3 2
-  ab = and :: []
+  andAnd : Term 10 8
+  andAnd = and :: and :: []
 \end{verbatim}
 
 \section{Evaluation Function}
 
 When comparing relative performance between evolved terms, one needs
-to evaluate them against some fitness function. We will proceed to write
-an evaluation function for the example language we have used so
-far. Recall that Agda will perform a termination and coverage check to
-prove the totality of functions.
+to evaluate them to pass the result to a fitness function. We will
+proceed to write an evaluation function for the example language we
+have used so far. Recall that Agda will perform a termination and
+coverage check to prove the totality of functions. Notice that the
+example below has a case for every possible term and input vector, and
+uses the structurally smaller tail of the input term in recursive
+calls.
 
 \begin{verbatim}
   eval : {A C : ℕ} → Term A C → Vec Bool A →
@@ -443,12 +447,12 @@ In addition to the term to evaluate, \texttt{eval} takes a vector of
 booleans \footnote{Do not get confused by the true/false constructors
   of the \texttt{Bool} type and \texttt{Term} types. Agda can
   differentiate between overloaded constructor names according to the
-  type they refer to in context.}
+  type they have in context.}
 whose length \texttt{A} is equal to the number of inputs the
 term expects. The return type of the function is another vector of
 bools \texttt{C}, matching the evaluated term's output. Both of these
-properties of course enforced statically, giving more assurance that
-are algorithm is doing what we expect.
+properties are of course enforced statically, giving more assurance that
+our algorithm is doing what we expect.
 
 \subsection{Non-Trivial Language Extensions}
 
@@ -519,9 +523,9 @@ they have been split in this manner?
 
 \subsection{Transitive Append}
 
-As was hinted at in the variable names of the example at the end of
-section \textbf{Formal Arity-Indexed Terms}, a safe append illustrates
-the transitive property. 
+Terms may have different initial input stacks, and produce
+different outputs according to their contained words. A safe append
+of two terms illustrates the transitive property. 
 
 \begin{verbatim}
   _++_ : {A B C : ℕ} →
@@ -530,11 +534,17 @@ the transitive property.
   [] ++ ys = ys
   (x :: xs) ++ ys = x :: (xs ++ ys)
 
+  bc : Term 2 1
+  bc = and :: []
+
+  ab : Term 3 2
+  ab = and :: []
+
   abc : Term 3 1
   abc = bc ++ ab
 \end{verbatim}
 
-If an attempt is made to append two terms whose inputs/output
+If an attempt is made to append two terms whose input/output
 requirements do not satisfy each other, a compile error will
 occur. Using a function with a such an informative type gives a high
 degree of confidence that we are doing the right thing when used
@@ -545,7 +555,7 @@ see the type of this function gives us more than just confidence.
 
 Now that we have a function to safely recombine terms in a transitive
 way, we need to come up with a compatible way to split a crossover
-parent. The following is a derivative of the \texttt{SplitView} type
+parent. The following is a derivative of the \texttt{TakeView} type
 in \cite{oury:tpop}.
 
 \begin{verbatim}
@@ -566,7 +576,7 @@ subterms which share \texttt{B} in a way that the resulting type can
 recombine the two via \texttt{xs ++ ys}.
 
 Given two parent terms split in such a way, crossover needs to produce
-two offspring that swap the subterms in the splits. Functions for both
+two offspring that swap the subterms at the splits. Functions for both
 of these swaps can be straightforwardly defined.
 
 \begin{verbatim}
@@ -628,7 +638,7 @@ dependent pair trick up our sleeves, we can define \texttt{split}.
 
 \subsection{Type-Preserving Crossover}
 
-With the types and functions already defined, being able to define a
+With the previous types and functions defined, defining a
 crossover function that takes two parent terms of the same type and
 returns two child terms of the same type is not far away.
 
@@ -679,13 +689,13 @@ possible positions of the male term, and filter out ones that would
 not be compatible with respect to transitively appending them back
 together.
 
-It is intuitive that in the algorithm we must compare the \texttt{B}
+It is intuitive that in the algorithm we must compare the target \texttt{B}
 that we are splitting on and the \texttt{B'} in the current
 split. Normally a comparison of two terms is performed by passing them
 to a function that returns a boolean value, then doing something
 different for the true and false cases. While a boolean value is
 enough to convince a certain kind of person that action should be
-taken, it is not enough to convince a type system.
+taken, it is not enough to convince a type checker.
 
 Consider the \texttt{yes p} case (analogous to a typical \texttt{true}
 case) within the \texttt{splits zero} case. We would like to return
@@ -703,7 +713,7 @@ What should you take away from all this? Mainly that the type checker
 needs to be convinced with formal constructive evidence to enforce
 invariants you prescribe. This evidence is in practice easy to work
 with, as it is made of ordinary dependent types like everything
-else. The payoff is that confidence that the burden of verifying that
+else. The payoff is confidence; the burden of verifying that
 a program behaves as it is expected to is lifted from the programmer's
 shoulders and onto the type checker's.
 
