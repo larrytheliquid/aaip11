@@ -147,7 +147,7 @@ distinction between what can be computed at compile time versus runtime. In
 particular, any ``value level'' function can be used at the type level
 as well.
 
-\section{Intro to Dependent Types}
+\section{Parameters}
 
 For purposes of pedagogy, we will first consider how to represent a
 population of terms/programs in a typical non-dependent functional
@@ -226,11 +226,12 @@ population size bug would be incorrect.
 In the dependently typed world, an easy and effective way to ensure
 that some invariant is held is to create a type that can only possibly
 construct values that satisfy said invariant. In our case we would
-like the population size to be some exact natural number that we specify at the
-beginning of the run. This brings us to one of the canonical examples
-of a dependent type, the vector. We have already seen how the list
-type takes a parameter to achieve polymorphism. Vectors take an
-additional parameter representing their length.
+like the population size parameter to be some exact natural number
+that we specify when configuring the run. This brings us to one of
+the canonical examples of a dependent type, the vector. We have
+already seen how the list type takes a parameter to achieve
+polymorphism. Vectors take an additional parameter representing their
+length.
 
 \begin{verbatim}
   data Vec (A : Set) : ℕ → Set where
@@ -298,7 +299,7 @@ errors from occuring. Since our \texttt{Population} is merely a
 specific kind of vector, we are able to use the safe \texttt{lookup}
 when defining a function for the selection process.
 
-\section{Requirement-Indexed Terms}
+\section{Representation}
 
 In the previous section we represented the terms in our population as
 unadorened lists of words. In order to perform type-safe crossover in
@@ -353,7 +354,7 @@ between the output description of \texttt{1 + n} and the input
 description of \texttt{2 + n}, we can see that the stack size will be
 one less than whatever it was previously.
 
-\subsection{Formal Terms}
+\subsection{Formal Arity-Indexed Terms}
 
 Now that we know how we want the input and output requirements of
 words to behave with respect to previous stack states, we can put our
@@ -416,17 +417,13 @@ can change is the original number of arguments on the stack.
   ab = and :: []
 \end{verbatim}
 
-\section{Total Evaluation}
+\section{Evaluation Function}
 
 When comparing relative performance between evolved terms, one needs
 to evaluate them against some fitness function. We will proceed to write
-an evaluation function for the example language we have used so far.
-
-In Agda any function the user writes must be total. For Agda's
-purposes, totality constitutes passing termination and coverage checks
-at compile time. Termination checking ensures that recursive calls are
-made with data that structurally decreases. Coverage checking ensures
-that a function handles every valid case for each of its arguments.
+an evaluation function for the example language we have used so
+far. Recall that Agda will perform a termination and coverage check to
+prove the totality of functions.
 
 \begin{verbatim}
   eval : {A C : ℕ} → Term A C → Vec Bool A →
@@ -453,7 +450,7 @@ bools \texttt{C}, matching the evaluated term's output. Both of these
 properties of course enforced statically, giving more assurance that
 are algorithm is doing what we expect.
 
-\section{Non-Trivial Languages}
+\subsection{Non-Trivial Language Extensions}
 
 The representation used can be extended to more complex languages,
 including operations that use the entire current stack as the input
@@ -510,20 +507,20 @@ We are assured that even in the presence of somewhat complex semantics
 for terms that the resulting arity must match the input/output
 requirements declared by \texttt{In}/\texttt{Out}.
 
-\section{Transitive Operations}
+\section{Genetic Operators}
 
 When writing genetic operators, for example
 \cite{tchernev:forthcross}'s 1-point crossover, we need to take
 subsections of different terms and recombine them in a safe
 matter. Tchernev points out that we need to split parent terms at a
-point of equal output stacks in order for a safe recombination. But,
+point of equal output stacks to achieve safe recombination. But,
 what is the criterion for a safe append of two arbitrary terms after
 they have been split in this manner?
 
 \subsection{Transitive Append}
 
 As was hinted at in the variable names of the example at the end of
-section \textbf{Requirement-Indexed Terms}, a safe append illustrates
+section \textbf{Formal Arity-Indexed Terms}, a safe append illustrates
 the transitive property. 
 
 \begin{verbatim}
@@ -629,13 +626,13 @@ dependent pair trick up our sleeves, we can define \texttt{split}.
     _ , (x :: xs) ++' ys
 \end{verbatim}
 
-\section{Type-Preserving Crossover}
+\subsection{Type-Preserving Crossover}
 
 With the types and functions already defined, being able to define a
 crossover function that takes two parent terms of the same type and
 returns two child terms of the same type is not far away.
 
-\subsection{Split Female}
+\subsubsection{Split Female}
 
 For the first step in 1-point crossover we need to split the first
 parent (referred to here as the female) at some random point. Thus, we
@@ -657,8 +654,6 @@ Note that we use a \texttt{\_mod\_} function which returns a finite set
 representing the modulus of its two arguments. The definition of this
 function can be found in the supplementary source code, as it is not
 particularly relevant to what we would like to explain.
-
-\subsection{Split Male}
 
 Based upon the \texttt{B} index at which the female was split, the
 male split can be determined by choosing a random member of all
@@ -712,7 +707,7 @@ else. The payoff is that confidence that the burden of verifying that
 a program behaves as it is expected to is lifted from the programmer's
 shoulders and onto the type checker's.
 
-\subsubsection{Defining Crossover}
+\subsubsection{Split Male}
 
 When we split the male parent we choose a random member of the
 type-correct splits. However, this function returns a value of type
