@@ -87,7 +87,7 @@ element is referred to as a ``word''. Every word can be modeled as a
 function which takes the previous stack state as a value and returns
 the subsequent, possibly altered, state. Consider for example a
 small word language in the boolean domain, made up of \texttt{true},
-\texttt{false}, \texttt{and}, \texttt{or} , and \texttt{not}. A word
+\texttt{or}, and \texttt{and}. A word
 such as \texttt{true} that would typically be considered as a value
 has no requirements on the input stack, and merely returns the input
 stack plus a boolean value of ``true'' pushed on top. On the other
@@ -97,7 +97,7 @@ back.
 
 For monotypic languages like our example, a simple typing rules
 emerge which assign to each word a natural number representing the
-minimum required input stack length, and a second number representing
+required input stack length, and a second number representing
 the output stack length. A sequence of such words forms a stack
 program, for which an aggregate input/output pair exists.
 
@@ -161,7 +161,7 @@ used for some evolutionary problem.
 
 \begin{verbatim}
   data Word : Set where
-    true false not and or : Word
+    true not and : Word
 \end{verbatim}
 
 This simple example language is intended to operate on the boolean domain using
@@ -305,66 +305,98 @@ unadorened lists of words. In order to perform type-safe crossover in
 a manner described by \cite{tchernev:forthcross}, the type of our
 terms will need to be more telling.
 
-\subsection{Informal Exploration}
+\subsection{Typing Derivation}
 
-Let us start by informally exploring what kind of input/output
-requirements each word in our example language should express. 
+It should come as no suprise that when we implement a type-safe
+version of crossover that we will need to pay close attention to the
+types of terms we are manipulating. Just as \texttt{Vec} had an extra
+natural number parameter for its length, we desire a \texttt{Term}
+type with an extra parameter for the size of the consumed stack, and
+another for the size of the produced stack.
+
+Before showing a generalized list-like \texttt{Term} type for arbitary
+languages, we will take a look at a more traditional embedding of a
+type relation into Agda.
+
+\begin{verbatim}
+  data Term (A : ℕ) : ℕ → Set where
+    []   : Term A A
+    true : {n : ℕ} → Term A      n  → Term A (1 + n)
+    not  : {n : ℕ} → Term A (1 + n) → Term A (1 + n)
+    and  : {n : ℕ} → Term A (2 + n) → Term A (1 + n)
+\end{verbatim}
+
+Recall that the first parameter is the consumed stack size and the second
+is the produced stack size. The empty term \texttt{[]} consumes
+some value \texttt{A} and produces a stack of same size, acting as the
+an identity operation. Note also that it has no premise, so it can be
+considered a type-theoretical axiom.
+
+The other three constructors are parameterized by a previous
+\texttt{Term} value, representing the premise of each typing rule. The
+\texttt{true} rule states that if we have some term which consumes some
+value \texttt{A}, and produces another arbitrary value \texttt{n},
+then the conclusion allows us to infer the existence of another term
+which has one additional output.
+
+In the \texttt{not} rule the premise requires that the previous output
+be more than just any arbitrary \texttt{n}. Instead, the previous
+stack size must be at least one, but can be greater. Because the
+\texttt{n} parameter was given in braces, Agda treats this as an
+implicit argument that can be unified/inferred according to other
+types in context. In this way, \texttt{1 + n} can represent several
+values such as \texttt{1 + 0} or \texttt{1 + 7}. The conclusion of
+\texttt{not} allows us to infer the existance of the another term of
+the same size (\texttt{1 + n}). This fits with our informal mental
+model of \texttt{not} requiring at least one argument to pop off the
+stack, and pushing the logical negation back on.
+
+Finally, \texttt{and} follows the same pattern except it requires at
+least two values and produces just one, leaving the output stack size exactly
+one less than what it was previously.
+
+As typing derivations, our previous list-based terms look like
+the following.
+
+\begin{verbatim}
+  notNot : Term 1 1
+  notNot = not (not [])
+
+  anotherTrue : Term 0 1
+  anotherTrue = not (not (true []))
+
+  nand : Term 2 1
+  nand = not (and [])
+
+  andAnd : Term 3 1
+  andAnd = and (and [])
+\end{verbatim}
+
+Our terms now have the extra consumption/production values in their
+type. The \texttt{andAnd} term shows how the representation correctly
+composes the types of several terms. The first \texttt{and} requires
+two values and produces one, which satisfies one of the second
+\texttt{and}'s requirements, resulting in a final type of
+\texttt{Term 3 1}.
+
+\subsection{Generic Terms}
+
+When writing functions over term types, it would be tedious to provide
+a case for every word in the language. Correspondingly, we will
+extract the common parts among the constructors of our language into a
+generic term.
 
 \begin{verbatim}
   In  : Word → ℕ → ℕ
   In  true  n =     n
-  In  false n =     n
   In  not   n = 1 + n
   In  and   n = 2 + n
-  In  or    n = 2 + n
 
   Out : Word → ℕ → ℕ
   Out true  n = 1 + n
-  Out false n = 1 + n
   Out not   n = 1 + n
   Out and   n = 1 + n
-  Out or    n = 1 + n
-\end{verbatim}
 
-Both of these functions really just take a word, a natural number, and
-return a natural number. There is nothing special about them that
-enforces type constraints in a clever way. But, as we are being
-informal let us pretend for a moment that two special properties exist
-for these functions.
-
-The \texttt{In} function declares what the input
-requirements are on the current stack state for each word.
-Thus, the first property we will pretend to exist is that the natural number
-parameter is a special implicit variable that unifies with whatever
-other else we require in the return value. As such, \texttt{true} has
-no input requirements whatsoever, and the stack state can be any
-\texttt{n}. In contrast, \texttt{and} requires that the current stack
-should at least be of size two, but the \texttt{n} is free to unify
-with more inputs that \texttt{and} will ignore.
-
-The second imagined property is that the \texttt{n} in the input
-and output functions shall be one and the same. Hence, for
-\texttt{true} the output stack shall be whatever the input stack was,
-plus one value. Pay special attention to \texttt{and}, as it
-illustrates how we expect operations to behave. We know that the input
-must be \texttt{2 + n}, as \texttt{and} consumes two values. Of
-course, \texttt{and} also produces one value to put back on the
-stack, but not just any stack. It pushes it back on the same stack, so
-between the output description of \texttt{1 + n} and the input
-description of \texttt{2 + n}, we can see that the stack size will be
-one less than whatever it was previously.
-
-\subsection{Formal Arity-Indexed Terms}
-
-Now that we know how we want the input and output requirements of
-words to behave with respect to previous stack states, we can put our
-prior work into practice by making a new concrete term type. When we
-string together a sequence of words, the compound value should
-indicate its input and output requirements. As such, our new
-\texttt{Term} type should have one natural number index for input
-requirements, and another for the resulting output.
-
-\begin{verbatim}
   data Term (A : ℕ) : ℕ → Set where
     []  : Term A A
 
@@ -373,16 +405,11 @@ requirements, and another for the resulting output.
       Term A (Out w n)
 \end{verbatim}
 
-The empty term has no requirements on the input stack, and returns a
-stack of the same size as the output, representing the identity
-function. In the cons case the previous term has \texttt{In} as its
-output and the resulting type has \texttt{Out} as its output. Notice
-the use of an implicit \texttt{n} variable that is passed to both
-\texttt{In} and \texttt{Out}. Agda will unify this variable to
-whatever unique typing constraints make sense. In other words, our two
-informal assumptions of a unifying \texttt{n} variable that is shared
-between the input and output functions is formally captured in the
-cons case of the term type.
+Just like a \texttt{List} or a \texttt{Vec}, our new \texttt{Term} now
+only has an empty case and a cons (\texttt{\_::\_}) case. Now we can
+rewrite our examples to look just like their \texttt{List}
+counterparts, except with the extra useful consumption/production
+natural numbers in their types.
 
 \begin{verbatim}
   identity : Term 1 1
@@ -398,23 +425,22 @@ cons case of the term type.
   andAnd = and :: and :: []
 \end{verbatim}
 
-Review the new types of the terms presented earlier, as well as a new
-term. \texttt{andAnd} is an example of how \texttt{Term} correctly
-composes input/output requirements. The first \texttt{and} requires
-two arguments and produces one, which the second can use. Hence, the
-compound term requires a total of three inputs and will produce one
-output.
+\subsection{Syntactic Non-Uniqueness}
 
-Notice that one syntatic representation of a term can act as the value
-for many different types. Specifically, what can change is the
-original number of arguments on the stack.
+To avoid confusion, we will point out that in our representation
+multiple syntactically identical terms can have different
+types. Specifically, what can change is the original number of
+arguments on the stack.
 
 \begin{verbatim}
-  nand : Term 6 5
-  nand = not :: and :: []
+  empty : Term 42 42
+  empty : Term 42 42
 
-  andAnd : Term 10 8
-  andAnd = and :: and :: []
+  nand' : Term 6 5
+  nand' = not :: and :: []
+
+  andAnd' : Term 10 8
+  andAnd' = and :: and :: []
 \end{verbatim}
 
 \section{Evaluation Function}
@@ -453,7 +479,7 @@ bools \texttt{C}, matching the evaluated term's output. Both of these
 properties are of course enforced statically, giving more assurance that
 our algorithm is doing what we expect.
 
-\subsection{Non-Trivial Language Extensions}
+\subsection{Extending To Richer Languages}
 
 The representation used can be extended to more complex languages,
 including operations that use the entire current stack as the input
