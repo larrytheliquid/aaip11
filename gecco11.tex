@@ -95,7 +95,7 @@ hand, \texttt{and} requires the input stack to have at least two elements,
 which it pops off in order to push their logical conjunction
 back.
 
-For monotypic languages like our example, a simple typing rules
+For monotypic languages like our example, simple typing rules
 emerge which assign to each word a natural number representing the
 required input stack length, and a second number representing
 the output stack length. A sequence of such words forms a stack
@@ -189,8 +189,8 @@ hold the \texttt{Word}s of our example language. Below are some
 examples of programs we can now represent.
 
 \begin{verbatim}
-  identity : Term
-  identity = not :: not :: []
+  notNot : Term
+  notNot = not :: not :: []
 
   anotherTrue : Term
   anotherTrue = not :: not :: true :: []
@@ -337,17 +337,18 @@ The other three constructors are parameterized by a previous
 \texttt{true} rule states that if we have some term which consumes some
 value \texttt{A}, and produces another arbitrary value \texttt{n},
 then the conclusion allows us to infer the existence of another term
-which has one additional output.
+which has the same input and one additional output. In fact, we can
+see that within any given subterm the \texttt{A} input remains the same.
 
 In the \texttt{not} rule the premise requires that the previous output
-be more than just any arbitrary \texttt{n}. Instead, the previous
+be more than just any arbitrary \texttt{n}. Instead, the previous output
 stack size must be at least one, but can be greater. Because the
 \texttt{n} parameter was given in braces, Agda treats this as an
 implicit argument that can be unified/inferred according to other
 types in context. In this way, \texttt{1 + n} can represent several
 values such as \texttt{1 + 0} or \texttt{1 + 7}. The conclusion of
 \texttt{not} allows us to infer the existance of the another term of
-the same size (\texttt{1 + n}). This fits with our informal mental
+the same output stack size (\texttt{1 + n}). This fits with our informal mental
 model of \texttt{not} requiring at least one argument to pop off the
 stack, and pushing the logical negation back on.
 
@@ -378,6 +379,44 @@ composes the types of several terms. The first \texttt{and} requires
 two values and produces one, which satisfies one of the second
 \texttt{and}'s requirements, resulting in a final type of
 \texttt{Term 3 1}.
+
+We can highlight that the input stack remains constant throughout
+subterms with an exploded view of each of the subterms in
+\texttt{andAnd}.
+
+\begin{verbatim}
+  a : Term 3 3
+  a = []
+
+  b : Term 3 2
+  b = and a
+
+  c : Term 3 1
+  c = and b
+\end{verbatim}
+
+\subsection{Syntactic Non-Uniqueness}
+
+To avoid confusion, we will point out that in our representation
+multiple syntactically identical terms can have different
+types. Specifically, what can change is the original number of
+arguments on the stack that the bottommost empty constructor provides.
+
+\begin{verbatim}
+  empty : Term 42 42
+  empty = []
+
+  nand' : Term 6 5
+  nand' = not (and [])
+
+  andAnd' : Term 10 8
+  andAnd' = and (and [])
+\end{verbatim}
+
+Being able to represent multiple different types with a
+syntatictically identical subterm is a property that we will later
+exploit when defining functions to safely split and recombine terms
+for crossover.
 
 \subsection{Generic Terms}
 
@@ -412,8 +451,8 @@ counterparts, except with the extra useful consumption/production
 natural numbers in their types.
 
 \begin{verbatim}
-  identity : Term 1 1
-  identity = not :: not :: []
+  notNot : Term 1 1
+  notNot = not :: not :: []
 
   anotherTrue : Term 0 1
   anotherTrue = not :: not :: true :: []
@@ -423,24 +462,6 @@ natural numbers in their types.
 
   andAnd : Term 3 1
   andAnd = and :: and :: []
-\end{verbatim}
-
-\subsection{Syntactic Non-Uniqueness}
-
-To avoid confusion, we will point out that in our representation
-multiple syntactically identical terms can have different
-types. Specifically, what can change is the original number of
-arguments on the stack.
-
-\begin{verbatim}
-  empty : Term 42 42
-  empty : Term 42 42
-
-  nand' : Term 6 5
-  nand' = not :: and :: []
-
-  andAnd' : Term 10 8
-  andAnd' = and :: and :: []
 \end{verbatim}
 
 \section{Evaluation Function}
@@ -479,7 +500,7 @@ bools \texttt{C}, matching the evaluated term's output. Both of these
 properties are of course enforced statically, giving more assurance that
 our algorithm is doing what we expect.
 
-\subsection{Extending To Richer Languages}
+\subsection{Richer Languages}
 
 The representation used can be extended to more complex languages,
 including operations that use the entire current stack as the input
@@ -580,8 +601,11 @@ see the type of this function gives us more than just confidence.
 
 Now that we have a function to safely recombine terms in a transitive
 way, we need to come up with a compatible way to split a crossover
-parent. The following is a derivative of the \texttt{TakeView} type
-in \cite{oury:tpop}.
+parent. In DTP a \textit{view} \cite{mcbride:viewleft} is a general technique for using a
+specialized type to reveal structure about another type. In our case
+we want to view a term as another type representing the two
+subsections it was split at. The following is a derivative of the
+\texttt{TakeView} type in \cite{oury:tpop}.
 
 \begin{verbatim}
   data Split {A C : ℕ} (B : ℕ) :
@@ -660,6 +684,12 @@ dependent pair trick up our sleeves, we can define \texttt{split}.
   split (suc A) (x :: ._) | _ , xs ++' ys =
     _ , (x :: xs) ++' ys
 \end{verbatim}
+
+Because we are returning a \texttt{Split} value, the split will always
+hold two subterms that can be transitively combined to produce the
+original. This way, splitting \texttt{andAnd} results in two
+\texttt{and :: []} values of type \texttt{Term 2 1} and
+\texttt{Term 3 2}, rather than anything else.
 
 \subsection{Type-Preserving Crossover}
 
