@@ -1,12 +1,11 @@
 \documentclass[runningheads,a4paper]{llncs}
-%% \usepackage[mathletters]{ucs}
-%% \usepackage[utf8]{inputenc}
-%% \usepackage{hyperref}
-%% \usepackage{tipa,textcomp}
 
 \usepackage{amssymb}
 \setcounter{tocdepth}{3}
 \usepackage{graphicx}
+\usepackage[mathletters]{ucs}
+\usepackage{bbm}
+\usepackage[utf8]{inputenc}
 
 \usepackage{url}
 \urldef{\mailsa}\path|{alfred.hofmann, ursula.barth, ingrid.haas, frank.holzwarth,|
@@ -21,15 +20,12 @@
 
 \title{[DRAFT] Verified Stack-Based Genetic Programming\\
 via Dependent Types}
-
 % a short form should be given in case it is too long for the running head
 \titlerunning{Verified Stack-Based GP via Dependent Types}
 
-\numberofauthors{1}
-\author{
-\alignauthor Larry Diehl\\
-       \email{larrytheliquid@gmail.com}
-}
+\author{Larry Diehl}
+
+\institute{\url{http://github.com/larrytheliquid}}
 
 \maketitle
 \begin{abstract}
@@ -48,14 +44,9 @@ strongly typed stack-based GP. Given the complexity involved in GP
 implementations and the potential for bugs, we hope to help
 researchers avoid errorneously attributing evolutionary explanations
 to GP run phenomena by using a verified implementation. 
+\keywords{genetic programming, dependent types, functional
+  programming, formal verification}
 \end{abstract}
-
-\category{D.1.1}{Programming Techniques}{Applicative (Functional) Programming}
-\category{I.2.2}{Artificial Intelligence}{Automatic Programming}[program synthesis, program verification]
-
-\terms{Languages, Reliability, Verification}
-
-\keywords{stack-based gp, linear gp, dependent types, pure functional programming, formal methods}
 
 \section{Introduction}
 
@@ -840,5 +831,8 @@ confidence that implementation bugs did not affect GP run behavior.
 Hopefully the examples presented herein can serve as a template to
 assist authors in encoding invariants for their particular flavors of
 GP within the context of dependently typed programming.
+
+\bibliographystyle{abbrv}
+\bibliography{aaip}
 
 \end{document}
