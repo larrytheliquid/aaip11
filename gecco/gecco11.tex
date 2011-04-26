@@ -1,0 +1,833 @@
+\documentclass{acm_proc_article-sp}
+\usepackage[mathletters]{ucs}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{tipa,textcomp}
+
+\begin{document}
+
+\title{[DRAFT] Verified Stack-Based Genetic Programming\\
+via Dependent Types}
+
+\subtitle{Genetic Programming}
+
+\numberofauthors{1}
+\author{
+\alignauthor Larry Diehl\\
+       \email{larrytheliquid@gmail.com}
+}
+
+\maketitle
+\begin{abstract}
+Genetic Programming (GP) can act as a powerful search tool for certain
+classes of problems. Much research has been done exploring the
+effectiveness of  various term representations, genetic operators, and
+techniques for intelligently navigating the search space by taking
+type information into account. This paper explores the less trodden
+road of formally capturing invariants normally assumed in GP
+implementations. Dependently Typed Programming (DTP) extends the
+type-level expressiveness normally available in functional programming
+languages to almost arbitrary propositions in formal systems. We use
+DTP to express and enforce \textit{semantic} invariants relevant to GP
+at the level of types, with a special focus on type-safe crossover for
+strongly typed stack-based GP. Given the complexity involved in GP
+implementations and the potential for bugs, we hope to help
+researchers avoid errorneously attributing evolutionary explanations
+to GP run phenomena by using a verified implementation. 
+\end{abstract}
+
+\category{D.1.1}{Programming Techniques}{Applicative (Functional) Programming}
+\category{I.2.2}{Artificial Intelligence}{Automatic Programming}[program synthesis, program verification]
+
+\terms{Languages, Reliability, Verification}
+
+\keywords{stack-based gp, linear gp, dependent types, purely functional programming, formal methods}
+
+\section{Introduction}
+
+While the earliest work in Genetic Programming used tree structures as
+candidate solutions to a problem, many alternative representations
+have been developed since (linear, graph, grammar-based, etc). The
+goal of this work is not to come up with a novel GP algorithm with
+respect to evolutionary performance, but rather give an example of a
+non-trivial but verified and simple to understand GP implementation.
+
+Flat linear structures are conceptually simpler than nested trees and
+intimately familiar to functional programmers, yet still provide
+competitive evolutionary results compared to tree \cite{tchernev:crossmethods}.
+As such, we will concentrate on developing a stack-based
+genetic programming algorithm.
+
+After a general overview of stack languages and dependent types, the
+structure of the paper will follow a common classification scheme for
+GP:
+\begin{itemize}
+\item{\textbf{parameters:}} Starting with a non-dependently typed
+  representation, we will see how to use standard affair dependent
+  typing to ensure the population size parameter is adhered to.
+\item{\textbf{representation:}} Next we will see how to modify our
+  term representation to use precise dependent types, encoding arity
+  information in the types of candidate programs.
+\item{\textbf{evaluation function:}} Taking advantage of the host
+  language's totality requirement, we'll see how easy it is to write
+  an evaluation function for evolved terms that is assured to
+  terminate and not otherwise diverge.
+\item{\textbf{genetic operators:}} Finally we will see how to encode
+  the property of transitivity into the types of functions related to
+  crossover, ensuring that ill-typed programs never enter the
+  population.
+\item{\textbf{initialization procedure:}} TODO.
+\end{itemize}
+
+\subsection{Stack Languages}
+
+In stack-based languages such as Forth \cite{kelly:forth} there is no
+distinction between values and functions. Instead, each syntactic
+element is referred to as a ``word''. Every word can be modeled as a
+function which takes the previous stack state as a value and returns
+the subsequent, possibly altered, state. Consider for example a
+small word language in the boolean domain, made up of \texttt{true},
+\texttt{or}, and \texttt{and}. A word
+such as \texttt{true} that would typically be considered as a value
+has no requirements on the input stack, and merely returns the input
+stack plus a boolean value of ``true'' pushed on top. On the other
+hand, \texttt{and} requires the input stack to have at least two elements,
+which it pops off in order to push their logical conjunction
+back.
+
+For monotypic languages like our example, simple typing rules
+emerge which assign to each word a natural number representing the
+required input stack length, and a second number representing
+the output stack length. A sequence of such words forms a stack
+program, for which an aggregate input/output pair exists.
+
+During genetic operations such as crossover, stack programs must be
+manipulated in some manner to produce offspring for the next
+generation. Tchnernev \cite{tchernev:forthcross} showed how to use arity
+information related to the consumed/produced stack sizes to only
+perform crossover at points that will produce well-typed
+terms. Tchnernev \cite{tchernev:crossmethods} has documented many different
+approaches to do this, but for simplicity of presentation we will use
+1-point crossover.
+
+\subsection{Dependent Types}
+
+Dependently typed languages have the distinguishing characteristic
+that arguments in type signatures may be assigned labels (similar to
+variable names), to be used elsewhere in type signature to declare
+\textit{dependencies} between values. This paper will use the
+dependently typed programming language Agda \cite{norell:agdatut} for
+all of its examples, but it should be possible to translate examples
+to similar languages such as Epigram \cite{mcbride:epigram} or
+Idris \cite{brady:idris}.
+
+Agda is a purely functional language (the most popular example being
+Haskell \cite{spj:haskell}), in which side effecting code is made explicit via
+types. This has the effect of making the implementation of pure algorithms
+more understandable, and complicated reasoning required to trace side
+effects can be isolated to a small corner of the final program.
+
+At compile time, Agda programs must pass two checks to prove their
+totality. Termination checking is accomplished by checking
+for structurally decreasing recursive calls. Coverage checking is
+accomplished by requiring that every type-correct value of a function's
+arguments is accounted for in the function's definition.
+Consequently, Agda programs do not fail to terminate
+\footnote{Although Agda programs can succeed to not terminate via
+  coinductive definition and corecursion, if controlled
+  non-termination is what we want.}
+or crash due to unexpected input. This meta-theoretical property of
+our language is convenient if we wanted to model evolution of
+partially defined programs, without having to worry confusing object
+language partiality with host language partiality.
+
+Finally, as a rule of thumb an Agda programmer forgets the traditional
+distinction between what can be computed at compile time versus runtime. In
+particular, any ``value level'' function can be used at the type level
+as well.
+
+\section{Parameters}
+
+For purposes of pedagogy, we will first consider how to represent a
+population of terms/programs in a typical non-dependent functional
+programming style. Thereafter, we will extend the example to use
+dependent types.
+\footnote{For a complete and proper tutorial on dependently typed programming in Agda, see \cite{norell:agdatut}}
+
+\subsection{Population List}
+
+First let's create a new type representing the possible words to be
+used for some evolutionary problem.
+
+\begin{verbatim}
+  data Word : Set where
+    true not and : Word
+\end{verbatim}
+
+This simple example language is intended to operate on the boolean domain using
+well-known constants and functions. Of course a stack program is not
+merely a single word, but a sequence of them that we would like to
+execute in order. The familiar cons-based list can serve as a
+container for several words, so let us type it out.
+
+\begin{verbatim}
+  data List (A : Set) : Set where
+    []  : List A
+    _::_ : A → List A → List A
+
+  Term : Set
+  Term = List Word
+\end{verbatim}
+
+Notice in particular the \texttt{A : Set} part of the list
+type. \texttt{Set} is the type of types in Agda, and the \texttt{A} is
+a label that acts like a variable, but at the level of type
+signatures. In other words, we have created a polymorphic list type
+which is parameterized by what kind of data it can
+contain. \texttt{Term} is a specific instantiation of lists that can
+hold the \texttt{Word}s of our example language. Below are some
+examples of programs we can now represent.
+
+\begin{verbatim}
+  notNot : Term
+  notNot = not :: not :: []
+
+  anotherTrue : Term
+  anotherTrue = not :: not :: true :: []
+
+  nand : Term
+  nand = not :: and :: []
+\end{verbatim}
+
+GP requires us to work on not one but a collection of several terms,
+referred to as the \textbf{population}. Normally, this might be
+represented as a list of lists of terms.
+
+\begin{verbatim}
+  Population : Set
+  Population = List Term
+\end{verbatim}
+
+While the type above is certainly functional, it leaves room for
+error. This brings us to our first example of preserving some GP
+invariant with the help of dependent types. Namely, the population
+that GP acts upon is expected to be a certain size, and it should stay
+that size as GP progresses from one generation to the next. Given the
+sum complexity due to initialization, selection, and genetic
+operators, it would not be surprising if a GP implementation had a bug
+that caused the population to be bigger or smaller than expected
+at some point in the run. Population size of course affects search
+space, so conclusions drawn from GP run data that was affected by a
+population size bug would be incorrect.
+
+\subsection{Population Vector}
+
+In the dependently typed world, an easy and effective way to ensure
+that some invariant is held is to create a type that can only possibly
+construct values that satisfy said invariant. In our case we would
+like the population size parameter to be some exact natural number
+that we specify when configuring the run. This brings us to one of
+the canonical examples of a dependent type, the vector. We have
+already seen how the list type takes a parameter to achieve
+polymorphism. Vectors take an additional parameter representing their
+length.
+
+\begin{verbatim}
+  data Vec (A : Set) : ℕ → Set where
+    []  : Vec A zero
+    _::_ : {n : ℕ} → A → Vec A n →
+      Vec A (suc n)
+
+  Population : ℕ → Set
+  Population n = Vec Term n
+\end{verbatim}
+
+The empty vector has a constant length of \texttt{zero}. The length of a vector
+produced by cons is the \texttt{suc}cessor of whatever the length of
+the tail is. Given such an inductive definition of a type, the natural
+number index of any given vector can be nothing but its length. Just
+like our definition of \texttt{Term}, \texttt{Population} is just a
+specific instantiation of a more general type (\texttt{Vec}).
+
+As an example, here is a small population of the three terms presented
+earlier.
+
+\begin{verbatim}
+  pop : Population 3
+  pop = identity :: anotherTrue :: nand :: []
+\end{verbatim}
+
+Once again, note that the type requires a population of exactly three
+terms. If we were to supply any more or less, a type error would occur at
+compile time. Effectively we move checking of certain \textit{semantic}
+properties of our program to compile time, meaning much less can go
+wrong once a program can be run.
+\footnote{In fact, the only thing
+  that can go wrong are logic errors due to bad encodings by the
+  programmer. Typical runtime errors due to non-termination or lack of
+  coverage are disallowed by the compiler.}
+
+Now that we've seen how to construct a dependent type, let's see how
+a function operating on \texttt{Vec} can make use of its properties.
+During selection, GP will need to retrieve a candidate program from
+the population. An all too common error taught even at introductory
+level programming is indexing outside the bounds of a container
+structure. How might one prevent this error? Ideally the type of the
+parameter used to lookup a member should have exactly as many values
+as the length of our vector. This way, a bijection would exist between
+the lookup index type and the vector.
+
+\begin{verbatim}
+  data Fin : ℕ → Set where
+    zero : {n : ℕ} → Fin (suc n)
+    suc  : {n : ℕ} → Fin n → Fin (suc n)
+
+  lookup : {A : Set} {n : ℕ} →
+    Fin n → Vec A n → A
+  lookup    zero (x :: xs) = x
+  lookup (suc i) (x :: xs) = lookup i xs
+\end{verbatim}
+
+The type of finite sets \texttt{Fin} has exactly \texttt{n} possible
+values for any \texttt{Fin n}. In the \texttt{lookup} function the
+natural number index is shared between the finite set and vector
+parameters. The effect of this sharing is that every finite set
+argument has exactly as many possible constructions as the length of
+the vector argument, statically preventing any index out of bounds
+errors from occuring. Since our \texttt{Population} is merely a
+specific kind of vector, we are able to use the safe \texttt{lookup}
+when defining a function for the selection process.
+
+\section{Representation}
+
+In the previous section we represented the terms in our population as
+unadorened lists of words. In order to perform type-safe crossover in
+a manner described by \cite{tchernev:forthcross}, the type of our
+terms will need to be more telling.
+
+\subsection{Typing Derivation}
+
+It should come as no suprise that when we implement a type-safe
+version of crossover that we will need to pay close attention to the
+types of terms we are manipulating. Just as \texttt{Vec} had an extra
+natural number parameter for its length, we desire a \texttt{Term}
+type with an extra parameter for the size of the consumed stack, and
+another for the size of the produced stack.
+
+Before showing a generalized list-like \texttt{Term} type for arbitary
+languages, we will take a look at a more traditional embedding of a
+type relation into Agda.
+
+\begin{verbatim}
+  data Term (A : ℕ) : ℕ → Set where
+    []   : Term A A
+    true : {n : ℕ} → Term A      n  → Term A (1 + n)
+    not  : {n : ℕ} → Term A (1 + n) → Term A (1 + n)
+    and  : {n : ℕ} → Term A (2 + n) → Term A (1 + n)
+\end{verbatim}
+
+Recall that the first parameter is the consumed stack size and the second
+is the produced stack size. The empty term \texttt{[]} consumes
+some value \texttt{A} and produces a stack of same size, acting as the
+an identity operation. Note also that it has no premise, so it can be
+considered a type-theoretical axiom.
+
+The other three constructors are parameterized by a previous
+\texttt{Term} value, representing the premise of each typing rule. The
+\texttt{true} rule states that if we have some term which consumes some
+value \texttt{A}, and produces another arbitrary value \texttt{n},
+then the conclusion allows us to infer the existence of another term
+which has the same input and one additional output. In fact, we can
+see that within any given subterm the \texttt{A} input remains the same.
+
+In the \texttt{not} rule the premise requires that the previous output
+be more than just any arbitrary \texttt{n}. Instead, the previous output
+stack size must be at least one, but can be greater. Because the
+\texttt{n} parameter was given in braces, Agda treats this as an
+implicit argument that can be unified/inferred according to other
+types in context. In this way, \texttt{1 + n} can represent several
+values such as \texttt{1 + 0} or \texttt{1 + 7}. The conclusion of
+\texttt{not} allows us to infer the existence of the another term of
+the same output stack size (\texttt{1 + n}). This fits with our informal mental
+model of \texttt{not} requiring at least one argument to pop off the
+stack, and pushing the logical negation back on.
+
+Finally, \texttt{and} follows the same pattern except it requires at
+least two values and produces just one, leaving the output stack size exactly
+one less than what it was previously.
+
+As typing derivations, our previous list-based terms look like
+the following.
+
+\begin{verbatim}
+  notNot : Term 1 1
+  notNot = not (not [])
+
+  anotherTrue : Term 0 1
+  anotherTrue = not (not (true []))
+
+  nand : Term 2 1
+  nand = not (and [])
+
+  andAnd : Term 3 1
+  andAnd = and (and [])
+\end{verbatim}
+
+Our terms now have the extra consumption/production values in their
+type. The \texttt{andAnd} term shows how the representation correctly
+composes the types of several terms. The first \texttt{and} requires
+two values and produces one, which satisfies one of the second
+\texttt{and}'s requirements, resulting in a final type of
+\texttt{Term 3 1}.
+
+We can highlight that the input stack remains constant throughout
+subterms with an exploded view of each of the subterms in
+\texttt{andAnd}.
+
+\begin{verbatim}
+  a : Term 3 3
+  a = []
+
+  b : Term 3 2
+  b = and a
+
+  c : Term 3 1
+  c = and b
+\end{verbatim}
+
+\subsection{Syntactic Non-Uniqueness}
+
+To avoid confusion, we will point out that in our representation
+multiple syntactically identical terms can have different
+types. Specifically, what can change is the original number of
+arguments on the stack that the bottommost empty constructor provides.
+
+\begin{verbatim}
+  empty : Term 42 42
+  empty = []
+
+  nand' : Term 6 5
+  nand' = not (and [])
+
+  andAnd' : Term 10 8
+  andAnd' = and (and [])
+\end{verbatim}
+
+Being able to represent multiple different types with a
+syntatictically identical subterm is a property that we will later
+exploit when defining functions to safely split and recombine terms
+for crossover.
+
+\subsection{Generic Terms}
+
+When writing functions over term types, it would be tedious to provide
+a case for every word in the language. Correspondingly, we will
+extract the common parts among the constructors of our language into a
+generic term.
+
+\begin{verbatim}
+  In  : Word → ℕ → ℕ
+  In  true  n =     n
+  In  not   n = 1 + n
+  In  and   n = 2 + n
+
+  Out : Word → ℕ → ℕ
+  Out true  n = 1 + n
+  Out not   n = 1 + n
+  Out and   n = 1 + n
+
+  data Term (A : ℕ) : ℕ → Set where
+    []  : Term A A
+
+    _::_ : {n : ℕ} →
+      (w : Word) → Term A (In w n) →
+      Term A (Out w n)
+\end{verbatim}
+
+Just like a \texttt{List} or a \texttt{Vec}, our new \texttt{Term} now
+only has an empty case and a cons (\texttt{\_::\_}) case. Now we can
+rewrite our examples to look just like their \texttt{List}
+counterparts, except with the extra useful consumption/production
+natural numbers in their types.
+
+\begin{verbatim}
+  notNot : Term 1 1
+  notNot = not :: not :: []
+
+  anotherTrue : Term 0 1
+  anotherTrue = not :: not :: true :: []
+
+  nand : Term 2 1
+  nand = not :: and :: []
+
+  andAnd : Term 3 1
+  andAnd = and :: and :: []
+\end{verbatim}
+
+\section{Evaluation Function}
+
+When comparing relative performance between evolved terms, one needs
+to evaluate them to pass the result to a fitness function. We will
+proceed to write an evaluation function for the example language we
+have used so far. Recall that Agda will perform a termination and
+coverage check to prove the totality of functions. Notice that the
+example below has a case for every possible term and input vector, and
+uses the structurally smaller tail of the input term in recursive
+calls.
+
+\begin{verbatim}
+  eval : {A C : ℕ} → Term A C → Vec Bool A →
+    Vec Bool C
+  eval [] as = as
+  eval (true :: xs) as = true :: eval xs as
+  eval (false :: xs) as = false :: eval xs as
+  eval (not :: xs) as with eval xs as
+  ... | c :: cs = ¬ c :: cs
+  eval (and :: xs) as with eval xs as
+  ... | c₂ :: c₁ :: cs = (c₁ ∧ c₂) :: cs
+  eval (or :: xs) as with eval xs as
+  ... | c₂ :: c₁ :: cs = (c₁ ∨ c₂) :: cs
+\end{verbatim}
+
+In addition to the term to evaluate, \texttt{eval} takes a vector of
+booleans \footnote{Do not get confused by the true/false constructors
+  of the \texttt{Bool} type and \texttt{Term} types. Agda can
+  differentiate between overloaded constructor names according to the
+  type they have in context.}
+whose length \texttt{A} is equal to the number of inputs the
+term expects. The return type of the function is another vector of
+bools \texttt{C}, matching the evaluated term's output. Both of these
+properties are of course enforced statically, giving more assurance that
+our algorithm is doing what we expect.
+
+\subsection{Richer Languages}
+
+The representation used can be extended to more complex languages,
+including operations that use the entire current stack as the input
+rather than just one or two top elements.
+
+\begin{verbatim}
+  data Word : Set where
+    dup swap pop square : Word
+
+  In : Word → ℕ → ℕ
+  In dup    n = 1 + n
+  In swap   n = 2 + n
+  In pop    n = 1 + n
+  In square n =     n
+
+  Out : Word → ℕ → ℕ
+  Out dup    n = 2 + n
+  Out swap   n = 2 + n
+  Out pop    n =     n
+  Out square n = n * n
+\end{verbatim}
+
+Operation \texttt{dup} requires a top element to be present and
+duplicates it, \texttt{swap} requires two elements to be present and
+pushes them back on in swapped order (keeping the net stack size the
+same), and \texttt{pop} requires one element to be on the stack and
+removes it. Those three should be familiar to programmers of stack
+languages, but \texttt{square} is a bit more interesting. It requires
+any number of elements to be on the stack. It proceeds to pop all of
+them, then pushes enough copies of the popped stack to equal the
+square of its original size. This manifests itself as the value
+\texttt{n * n} for the \texttt{Out} case of \texttt{square}.
+
+\begin{verbatim}
+  eval : {A C : ℕ} → Term A C → Vec Bool A →
+    Vec Bool C
+  eval (dup :: xs) as with eval xs as
+  ... | c :: cs = c :: c :: cs
+  eval (swap :: xs) as with eval xs as
+  ... | c₂ :: c₁ :: cs = c₁ :: c₂ :: cs
+  eval (pop :: xs) as with eval xs as
+  ... | c :: cs = cs
+  eval (_::_ {n = n} square xs) as with eval xs as
+  ... | cs = concat (replicate {n = n} cs)
+\end{verbatim}
+
+The only case here worth drawing attention to is that of
+\texttt{square}, which \texttt{replicate}s the output stack n times
+and \texttt{concat}s into a single term.
+\footnote{For dependently typed programmers, it should be pointed out
+  that our representation does not run into termination issues when
+  defining semantics for operations that increase the input stack. }
+We are assured that even in the presence of somewhat complex semantics
+for terms that the resulting arity must match the input/output
+requirements declared by \texttt{In}/\texttt{Out}.
+
+\section{Genetic Operators}
+
+When writing genetic operators, for example
+Tchnernev's \cite{tchernev:forthcross} 1-point crossover, we need to take
+subsections of different terms and recombine them in a safe
+matter. Tchernev points out that we need to split parent terms at a
+point of equal output stacks to achieve safe recombination. But,
+what is the criterion for a safe append of two arbitrary terms after
+they have been split in this manner?
+
+\subsection{Transitive Append}
+
+Terms may have different initial input stacks, and produce
+different outputs according to their contained words. A safe append
+of two terms illustrates the transitive property. 
+
+\begin{verbatim}
+  _++_ : {A B C : ℕ} →
+    Term B C → Term A B →
+    Term A C
+  [] ++ ys = ys
+  (x :: xs) ++ ys = x :: (xs ++ ys)
+
+  bc : Term 2 1
+  bc = and :: []
+
+  ab : Term 3 2
+  ab = and :: []
+
+  abc : Term 3 1
+  abc = bc ++ ab
+\end{verbatim}
+
+If an attempt is made to append two terms whose input/output
+requirements do not satisfy each other, a compile error will
+occur. Using a function with a such an informative type gives a high
+degree of confidence that we are doing the right thing when used
+inside another function such as crossover. In fact, as we shall soon
+see the type of this function gives us more than just confidence.
+
+\subsection{Transitive Split}
+
+Now that we have a function to safely recombine terms in a transitive
+way, we need to come up with a compatible way to split a crossover
+parent. In DTP a \textit{view} \cite{mcbride:viewleft} is a general technique for using a
+specialized type to reveal structure about another type. In our case
+we want to view a term as another type representing the two
+subsections it was split at. The following is a derivative of the
+\texttt{TakeView} type in \cite{oury:tpop}.
+
+\begin{verbatim}
+  data Split {A C : ℕ} (B : ℕ) :
+    Term A C → Set where
+    _++'_ :
+      (xs : Term B C)
+      (ys : Term A B) →
+      Split B (xs ++ ys)
+\end{verbatim}
+
+The type above captures exactly how we would like split terms to be
+represented such that they can be transitively recombined. The
+\texttt{B} natural number index reveals the satisfied
+input/output point a term was split at, and the term index is the
+value we are splitting. The constructor carries the two
+subterms which share \texttt{B} in a way that the resulting type can
+recombine the two via \texttt{xs ++ ys}.
+
+Given two parent terms split in such a way, crossover needs to produce
+two offspring that swap the subterms at the splits. Functions for both
+of these swaps can be straightforwardly defined.
+
+\begin{verbatim}
+  swap₁ : {A B C : ℕ} {xs ys : Term A C} →
+    Split B xs → Split B ys → Term A C
+  swap₁ (xs ++' ys) (as ++' bs) = xs ++ bs
+
+  swap₂ : {A B C : ℕ} {xs ys : Term A C} →
+    Split B xs → Split B ys → Term A C
+  swap₂ (xs ++' ys) (as ++' bs) = as ++ ys
+\end{verbatim}
+
+\subsubsection{Dependent Pairs}
+
+Given some term and a natural number, we would like to split the term
+at the point indexed into. This function will be the key component of
+determining the split in the female parent of
+crossover. \texttt{Split} is specific enough to tell us the shared
+\texttt{B} between the two subterms. However, for the purposes of this
+function we do not care what \texttt{B} is (actually, we would like
+the function to tell us what it is.)
+
+\begin{verbatim}
+  data Σ (A : Set) (B : A → Set) : Set where
+    _,_ : (x : A) → B x → Σ A B
+\end{verbatim}
+
+A non-dependent pair, or tuple, carries 2 values of arbitrary
+types. In the dependent version of pairs, the \textit{value} in the first
+component is used to determine the \textit{type} in the second
+component. One dependently typed programming technique is using a
+dependent pair to hide the index type of a return value when you don't
+know or care what it will be. For example, sometimes we would merely
+like to write down a vector value and have the compiler figure out the
+unique possible length.
+
+\begin{verbatim}
+  specifiedLength : Σ ℕ (λ n → Vec Bool n)
+  specifiedLength = 3 , true :: false :: true :: []
+
+  discoveredLength : Σ ℕ (λ n → Vec Bool n)
+  discoveredLength = _ , true :: false :: true :: []
+\end{verbatim}
+
+Note the use of an anonymous function in the type. Remember that in DTP
+we can do anything at the type level that we can do at the value
+level, including the use of our ultimate mascot $\lambda$. With this
+dependent pair trick up our sleeves, we can define \texttt{split}.
+
+\begin{verbatim}
+  split : {A C : ℕ} (n : ℕ) (xs : Term A C) →
+    Σ ℕ (λ B → Split B xs)
+  split   zero  xs = _ , [] ++' xs
+  split (suc n) [] = _ , [] ++' []
+  split (suc n) (x :: xs) with split n xs
+  split (suc A) (x :: ._) | _ , xs ++' ys =
+    _ , (x :: xs) ++' ys
+\end{verbatim}
+
+Because we are returning a \texttt{Split} value, the split will always
+hold two subterms that can be transitively combined to produce the
+original. This way, splitting \texttt{andAnd} results in two
+\texttt{and :: []} values of type \texttt{Term 2 1} and
+\texttt{Term 3 2}, rather than anything else.
+
+\subsection{Type-Preserving Crossover}
+
+With the previous types and functions defined, defining a
+crossover function that takes two parent terms of the same type and
+returns two child terms of the same type is not far away.
+
+\subsubsection{Split Female}
+
+For the first step in 1-point crossover we need to split the first
+parent (referred to here as the female) at some random point. Thus, we
+need to know the length of the female, then choose a random number
+bounded by that length.
+
+\begin{verbatim}
+  length : {A C : ℕ} → Term A C → ℕ
+  length [] = 0
+  length (x :: xs) = suc (length xs)
+
+  splitFemale : {A C : ℕ} → (xs : Term A C) → ℕ →
+    Σ ℕ (λ B → Split B xs)
+  splitFemale xs rand with rand mod (suc (length xs))
+  ... | i = split (toℕ i) xs
+\end{verbatim}
+
+Note that we use a \texttt{\_mod\_} function which returns a finite set
+representing the modulus of its two arguments. The definition of this
+function can be found in the supplementary source code, as it is not
+particularly relevant to what we would like to explain.
+
+Based upon the \texttt{B} index at which the female was split, the
+male split can be determined by choosing a random member of all
+possible compatible splits.
+
+\begin{verbatim}
+  splits : {A C : ℕ} (n B : ℕ) (xs : Term A C) →
+    Σ ℕ (λ n → Vec (Split B xs) n)
+  splits zero B xs with split zero xs
+  ... | B' , ys with B =? B'
+  ... | yes p rewrite p = _ , ys :: []
+  ... | no p = _ , []
+  splits (suc n) B xs with split (suc n) xs
+  ... | B' , ys with B =? B' | splits n B xs
+  ... | yes p | _ , yss rewrite p = _ , ys :: yss
+  ... | no p | _ , yss = _ , yss
+\end{verbatim}
+
+\subsubsection{Propositional Equality}
+
+In the definition of \texttt{splits} we simultaneously split at all
+possible positions of the male term, and filter out ones that would
+not be compatible with respect to transitively appending them back
+together.
+
+It is intuitive that in the algorithm we must compare the target \texttt{B}
+that we are splitting on and the \texttt{B'} in the current
+split. Normally a comparison of two terms is performed by passing them
+to a function that returns a boolean value, then doing something
+different for the true and false cases. While a boolean value is
+enough to convince a certain kind of person that action should be
+taken, it is not enough to convince a type checker.
+
+Consider the \texttt{yes p} case (analogous to a typical \texttt{true}
+case) within the \texttt{splits zero} case. We would like to return
+our freshly split \texttt{ys} value, but the type checker won't have
+it. Why not? If we look at the type signature of \texttt{splits}, it
+requires a \texttt{Split B xs}, but \texttt{ys} is a \texttt{Split B'
+  xs}. Luckily the \texttt{=?} comparison function returned something
+more than just a boolean, but a constructive proof that both compared
+values were in fact the same. We pass the proof \texttt{p} (pattern
+matched as \texttt{yes p}) to Agda's \texttt{rewrite} keyword to
+convince the type checker that \texttt{ys : Split B' xs} is acceptable
+because \texttt{B ≡ B'}.
+
+What should you take away from all this? Mainly that the type checker
+needs to be convinced with formal constructive evidence to enforce
+invariants you prescribe. This evidence is in practice easy to work
+with, as it is made of ordinary dependent types like everything
+else. The payoff is confidence; the burden of verifying that
+a program behaves as it is expected to is lifted from the programmer's
+shoulders and onto the type checker's.
+
+\subsubsection{Split Male}
+
+When we split the male parent we choose a random member of the
+type-correct splits. However, this function returns a value of type
+\texttt{Maybe}, so that it may return \texttt{nothing} if there is no
+compatible split at all.
+
+\begin{verbatim}
+  splitMale : {A C : ℕ} (xs : Term A C) →
+    (B rand : ℕ) → Maybe (Split B xs)
+  splitMale xs B rand
+    with splits (length xs) B xs
+  ... | zero , [] = nothing
+  ... | suc n , xss
+    = just (lookup (rand mod suc n) xss)
+\end{verbatim}
+
+Note that the proof complexity in the implementation of
+\texttt{splits} is isolated. Once we have a function definition that
+typechecks, we can freely use it without having to do any work over
+again.
+
+Finally, we can write \texttt{crossover} to combine the female and
+male splits, and return both children using the \texttt{swap}s defined
+earlier.
+
+\begin{verbatim}
+  crossover : {A C : ℕ}
+    (female male : Term A C) (randF randM : ℕ) →
+    Term A C × Term A C
+  crossover female male randF randM
+    with splitFemale female randF
+  ... | B , xs with splitMale male B randM
+  ... | nothing = female , male
+  ... | just ys = swap₁ xs ys , swap₂ xs ys
+\end{verbatim}
+
+In the case where no valid male swap existed, we return the original
+two parents.
+
+\section{Conclusion}
+
+Dependent types can be used to enforce desired invariants by using
+informative data types and function type signatures. We have shown
+some basics for creating a verified stack-based GP implementation
+using type-safe 1-point crossover.
+
+By building on a verified base, more complex GP algorithms can be
+created, and evolutionary data can be analyzed with much greater
+confidence that implementation bugs did not affect GP run behavior.
+
+Hopefully the examples presented herein can serve as a template to
+assist authors in encoding invariants for their particular flavors of
+GP within the context of dependently typed programming.
+
+\bibliographystyle{abbrv}
+\bibliography{gecco11}
+
+\end{document}

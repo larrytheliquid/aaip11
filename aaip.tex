@@ -1,15 +1,29 @@
-\documentclass{acm_proc_article-sp}
-\usepackage[mathletters]{ucs}
-\usepackage[utf8]{inputenc}
-\usepackage{hyperref}
-\usepackage{tipa,textcomp}
+\documentclass[runningheads,a4paper]{llncs}
+%% \usepackage[mathletters]{ucs}
+%% \usepackage[utf8]{inputenc}
+%% \usepackage{hyperref}
+%% \usepackage{tipa,textcomp}
+
+\usepackage{amssymb}
+\setcounter{tocdepth}{3}
+\usepackage{graphicx}
+
+\usepackage{url}
+\urldef{\mailsa}\path|{alfred.hofmann, ursula.barth, ingrid.haas, frank.holzwarth,|
+\urldef{\mailsb}\path|anna.kramer, leonie.kunz, christine.reiss, nicole.sator,|
+\urldef{\mailsc}\path|erika.siebert-cole, peter.strasser, lncs}@springer.com|    
+\newcommand{\keywords}[1]{\par\addvspace\baselineskip
+\noindent\keywordname\enspace\ignorespaces#1}
 
 \begin{document}
+
+\mainmatter  % start of an individual contribution
 
 \title{[DRAFT] Verified Stack-Based Genetic Programming\\
 via Dependent Types}
 
-\subtitle{Genetic Programming}
+% a short form should be given in case it is too long for the running head
+\titlerunning{Verified Stack-Based GP via Dependent Types}
 
 \numberofauthors{1}
 \author{
@@ -41,7 +55,7 @@ to GP run phenomena by using a verified implementation.
 
 \terms{Languages, Reliability, Verification}
 
-\keywords{stack-based gp, linear gp, dependent types, purely functional programming, formal methods}
+\keywords{stack-based gp, linear gp, dependent types, pure functional programming, formal methods}
 
 \section{Introduction}
 
@@ -347,7 +361,7 @@ stack size must be at least one, but can be greater. Because the
 implicit argument that can be unified/inferred according to other
 types in context. In this way, \texttt{1 + n} can represent several
 values such as \texttt{1 + 0} or \texttt{1 + 7}. The conclusion of
-\texttt{not} allows us to infer the existance of the another term of
+\texttt{not} allows us to infer the existence of the another term of
 the same output stack size (\texttt{1 + n}). This fits with our informal mental
 model of \texttt{not} requiring at least one argument to pop off the
 stack, and pushing the logical negation back on.
@@ -826,8 +840,5 @@ confidence that implementation bugs did not affect GP run behavior.
 Hopefully the examples presented herein can serve as a template to
 assist authors in encoding invariants for their particular flavors of
 GP within the context of dependently typed programming.
-
-\bibliographystyle{abbrv}
-\bibliography{gecco11}
 
 \end{document}
