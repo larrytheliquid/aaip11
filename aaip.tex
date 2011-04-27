@@ -29,7 +29,7 @@ via Dependent Types}
 
 \maketitle
 \begin{abstract}
-Genetic Programming (GP) can act as a powerful search tool for certain
+Genetic Programming (GP) can act as a powerful search tool for many
 classes of problems. Much research has been done exploring the
 effectiveness of  various term representations, genetic operators, and
 techniques for intelligently navigating the search space by taking
@@ -37,7 +37,7 @@ type information into account. This paper explores the less trodden
 road of formally capturing invariants normally assumed in GP
 implementations. Dependently Typed Programming (DTP) extends the
 type-level expressiveness normally available in functional programming
-languages to almost arbitrary propositions in formal systems. We use
+languages to arbitrary propositions in intuitionistic logic. We use
 DTP to express and enforce \textit{semantic} invariants relevant to GP
 at the level of types, with a special focus on type-safe crossover for
 strongly typed stack-based GP. Given the complexity involved in GP
@@ -59,9 +59,9 @@ non-trivial but verified and simple to understand GP implementation.
 
 Flat linear structures are conceptually simpler than nested trees and
 intimately familiar to functional programmers, yet still provide
-competitive evolutionary results compared to tree \cite{tchernev:crossmethods}.
-As such, we will concentrate on developing a stack-based
-genetic programming algorithm.
+competitive evolutionary results compared to tree representations
+\cite{tchernev:crossmethods}. As such, we will concentrate on
+developing a stack-based genetic programming algorithm.
 
 After a general overview of stack languages and dependent types, the
 structure of the paper will follow a common classification scheme for
@@ -77,23 +77,25 @@ GP:
   language's totality requirement, we'll see how easy it is to write
   an evaluation function for evolved terms that is assured to
   terminate and not otherwise diverge.
-\item{\textbf{genetic operators:}} Finally we will see how to encode
+\item{\textbf{genetic operators:}} Next we will encode
   the property of transitivity into the types of functions related to
   crossover, ensuring that ill-typed programs never enter the
   population.
-\item{\textbf{initialization procedure:}} TODO.
+\item{\textbf{initialization procedure:}} Finally we will show a basic
+  procedure to initialize our population, making sure to only randomly
+  select programs that match the type signature of the goal program.
 \end{itemize}
 
 \subsection{Stack Languages}
 
 In stack-based languages such as Forth \cite{kelly:forth} there is no
-distinction between values and functions. Instead, each syntactic
+distinction between constants and procedures. Instead, each syntactic
 element is referred to as a ``word''. Every word can be modeled as a
 function which takes the previous stack state as a value and returns
 the subsequent, possibly altered, state. Consider for example a
 small word language in the boolean domain, made up of \texttt{true},
 \texttt{or}, and \texttt{and}. A word
-such as \texttt{true} that would typically be considered as a value
+such as \texttt{true} (that would typically be considered a constant)
 has no requirements on the input stack, and merely returns the input
 stack plus a boolean value of ``true'' pushed on top. On the other
 hand, \texttt{and} requires the input stack to have at least two elements,
@@ -120,14 +122,14 @@ approaches to do this, but for simplicity of presentation we will use
 Dependently typed languages have the distinguishing characteristic
 that arguments in type signatures may be assigned labels (similar to
 variable names), to be used elsewhere in type signature to declare
-\textit{dependencies} between values. This paper will use the
+\textit{dependencies} between types and values. This paper will use the
 dependently typed programming language Agda \cite{norell:agdatut} for
 all of its examples, but it should be possible to translate examples
 to similar languages such as Epigram \cite{mcbride:epigram} or
 Idris \cite{brady:idris}.
 
 Agda is a purely functional language (the most popular example being
-Haskell \cite{spj:haskell}), in which side effecting code is made explicit via
+Haskell \cite{spj:haskell}), in which effectful code is made explicit via
 types. This has the effect of making the implementation of pure algorithms
 more understandable, and complicated reasoning required to trace side
 effects can be isolated to a small corner of the final program.
@@ -185,7 +187,7 @@ container for several words, so let us type it out.
 \end{verbatim}
 
 Notice in particular the \texttt{A : Set} part of the list
-type. \texttt{Set} is the type of types in Agda, and the \texttt{A} is
+type. \texttt{Set} is the type of types in Agda, and \texttt{A} is
 a label that acts like a variable, but at the level of type
 signatures. In other words, we have created a polymorphic list type
 which is parameterized by what kind of data it can
@@ -229,8 +231,9 @@ population size bug would be incorrect.
 
 In the dependently typed world, an easy and effective way to ensure
 that some invariant is held is to create a type that can only possibly
-construct values that satisfy said invariant. In our case we would
-like the population size parameter to be some exact natural number
+construct values that satisfy said invariant
+(``correctness-by-construction''). In our case we would
+like the population size parameter to be some natural number
 that we specify when configuring the run. This brings us to one of
 the canonical examples of a dependent type, the vector. We have
 already seen how the list type takes a parameter to achieve
@@ -259,7 +262,7 @@ earlier.
 
 \begin{verbatim}
   pop : Population 3
-  pop = identity :: anotherTrue :: nand :: []
+  pop = notNot :: anotherTrue :: nand :: []
 \end{verbatim}
 
 Once again, note that the type requires a population of exactly three
@@ -280,7 +283,7 @@ level programming is indexing outside the bounds of a container
 structure. How might one prevent this error? Ideally the type of the
 parameter used to lookup a member should have exactly as many values
 as the length of our vector. This way, a bijection would exist between
-the lookup index type and the vector.
+the lookup index type and the vector positions.
 
 \begin{verbatim}
   data Fin : ℕ → Set where
@@ -321,29 +324,29 @@ another for the size of the produced stack.
 
 Before showing a generalized list-like \texttt{Term} type for arbitary
 languages, we will take a look at a more traditional embedding of a
-type relation into Agda.
+typing relation into Agda.
 
 \begin{verbatim}
-  data Term (A : ℕ) : ℕ → Set where
-    []   : Term A A
-    true : {n : ℕ} → Term A      n  → Term A (1 + n)
-    not  : {n : ℕ} → Term A (1 + n) → Term A (1 + n)
-    and  : {n : ℕ} → Term A (2 + n) → Term A (1 + n)
+  data Term (m : ℕ) : ℕ → Set where
+    []   : Term inp
+    true : {n : ℕ} → Term m      n  → Term m (1 + n)
+    not  : {n : ℕ} → Term m (1 + n) → Term m (1 + n)
+    and  : {n : ℕ} → Term m (2 + n) → Term m (1 + n)
 \end{verbatim}
 
 Recall that the first parameter is the consumed stack size and the second
 is the produced stack size. The empty term \texttt{[]} consumes
-some value \texttt{A} and produces a stack of same size, acting as the
-an identity operation. Note also that it has no premise, so it can be
+some value \texttt{m} and produces a stack of same size, acting as
+an identity program. Note also that it has no premise, so it can be
 considered a type-theoretical axiom.
 
 The other three constructors are parameterized by a previous
 \texttt{Term} value, representing the premise of each typing rule. The
 \texttt{true} rule states that if we have some term which consumes some
-value \texttt{A}, and produces another arbitrary value \texttt{n},
+value \texttt{m}, and produces another arbitrary value \texttt{n},
 then the conclusion allows us to infer the existence of another term
 which has the same input and one additional output. In fact, we can
-see that within any given subterm the \texttt{A} input remains the same.
+see that within any given subterm the \texttt{m} input remains the same.
 
 In the \texttt{not} rule the premise requires that the previous output
 be more than just any arbitrary \texttt{n}. Instead, the previous output
@@ -362,7 +365,8 @@ least two values and produces just one, leaving the output stack size exactly
 one less than what it was previously.
 
 As typing derivations, our previous list-based terms look like
-the following.
+the following (note that we have overloaded the constructors of the
+\texttt{Word} and \texttt{Term} types).
 
 \begin{verbatim}
   notNot : Term 1 1
