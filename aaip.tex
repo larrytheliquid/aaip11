@@ -327,36 +327,36 @@ languages, we will take a look at a more traditional embedding of a
 typing relation into Agda.
 
 \begin{verbatim}
-  data Term (m : ℕ) : ℕ → Set where
-    []   : Term inp
-    true : {n : ℕ} → Term m      n  → Term m (1 + n)
-    not  : {n : ℕ} → Term m (1 + n) → Term m (1 + n)
-    and  : {n : ℕ} → Term m (2 + n) → Term m (1 + n)
+  data Term (inp : ℕ) : ℕ → Set where
+    []   : Term inp inp
+    true : {out : ℕ} → Term inp      out  → Term m (1 + out)
+    not  : {out : ℕ} → Term inp (1 + out) → Term m (1 + out)
+    and  : {out : ℕ} → Term inp (2 + out) → Term m (1 + out)
 \end{verbatim}
 
 Recall that the first parameter is the consumed stack size and the second
 is the produced stack size. The empty term \texttt{[]} consumes
-some value \texttt{m} and produces a stack of same size, acting as
+some value \texttt{inp} and produces a stack of same size, acting as
 an identity program. Note also that it has no premise, so it can be
 considered a type-theoretical axiom.
 
 The other three constructors are parameterized by a previous
 \texttt{Term} value, representing the premise of each typing rule. The
 \texttt{true} rule states that if we have some term which consumes some
-value \texttt{m}, and produces another arbitrary value \texttt{n},
+value \texttt{inp}, and produces another arbitrary value \texttt{out},
 then the conclusion allows us to infer the existence of another term
 which has the same input and one additional output. In fact, we can
-see that within any given subterm the \texttt{m} input remains the same.
+see that within any given subterm the \texttt{inp} input remains the same.
 
 In the \texttt{not} rule the premise requires that the previous output
-be more than just any arbitrary \texttt{n}. Instead, the previous output
+be more than just any arbitrary \texttt{out}. Instead, the previous output
 stack size must be at least one, but can be greater. Because the
-\texttt{n} parameter was given in braces, Agda treats this as an
+\texttt{out} parameter was given in braces, Agda treats this as an
 implicit argument that can be unified/inferred according to other
-types in context. In this way, \texttt{1 + n} can represent several
+types in context. In this way, \texttt{1 + out} can represent several
 values such as \texttt{1 + 0} or \texttt{1 + 7}. The conclusion of
 \texttt{not} allows us to infer the existence of the another term of
-the same output stack size (\texttt{1 + n}). This fits with our informal mental
+the same output stack size (\texttt{1 + out}). This fits with our informal mental
 model of \texttt{not} requiring at least one argument to pop off the
 stack, and pushing the logical negation back on.
 
@@ -435,22 +435,22 @@ extract the common parts among the constructors of our language into a
 generic term.
 
 \begin{verbatim}
-  In  : Word → ℕ → ℕ
-  In  true  n =     n
-  In  not   n = 1 + n
-  In  and   n = 2 + n
+  pre  : Word → ℕ → ℕ
+  pre  true  n =     n
+  pre  not   n = 1 + n
+  pre  and   n = 2 + n
 
-  Out : Word → ℕ → ℕ
-  Out true  n = 1 + n
-  Out not   n = 1 + n
-  Out and   n = 1 + n
+  post : Word → ℕ → ℕ
+  post true  n = 1 + n
+  post not   n = 1 + n
+  post and   n = 1 + n
 
-  data Term (A : ℕ) : ℕ → Set where
-    []  : Term A A
+  data Term (inp : ℕ) : ℕ → Set where
+    []  : Term inp inp
 
-    _::_ : {n : ℕ} →
-      (w : Word) → Term A (In w n) →
-      Term A (Out w n)
+    _::_ : {n : ℕ} (w : Word) →
+      Term inp (pre w n) →
+      Term inp (post w n)
 \end{verbatim}
 
 Just like a \texttt{List} or a \texttt{Vec}, our new \texttt{Term} now
@@ -475,27 +475,27 @@ natural numbers in their types.
 
 \section{Evaluation Function}
 
-When comparing relative performance between evolved terms, one needs
-to evaluate them to pass the result to a fitness function. We will
+When comparing relative performance between evolved terms, one
+typically needs to evaluate them to determine fitness . We will
 proceed to write an evaluation function for the example language we
-have used so far. Recall that Agda will perform a termination and
+have used so far. Rest soundly knowing that Agda will perform a termination and
 coverage check to prove the totality of functions. Notice that the
 example below has a case for every possible term and input vector, and
 uses the structurally smaller tail of the input term in recursive
 calls.
 
 \begin{verbatim}
-  eval : {A C : ℕ} → Term A C → Vec Bool A →
-    Vec Bool C
-  eval [] as = as
-  eval (true :: xs) as = true :: eval xs as
-  eval (false :: xs) as = false :: eval xs as
-  eval (not :: xs) as with eval xs as
-  ... | c :: cs = ¬ c :: cs
-  eval (and :: xs) as with eval xs as
-  ... | c₂ :: c₁ :: cs = (c₁ ∧ c₂) :: cs
-  eval (or :: xs) as with eval xs as
-  ... | c₂ :: c₁ :: cs = (c₁ ∨ c₂) :: cs
+  eval : {inp out : ℕ} → Term inp out → Vec Bool inp →
+    Vec Bool out
+  eval [] is = is
+  eval (true :: xs) is = true :: eval xs is
+  eval (false :: xs) is = false :: eval xs is
+  eval (not :: xs) is with eval xs is
+  ... | o :: os = ¬ o :: os
+  eval (and :: xs) is with eval xs is
+  ... | o₂ :: o₁ :: os = (o₁ ∧ o₂) :: ns
+  eval (or :: xs) is with eval xs is
+  ... | o₂ :: o₁ :: os = (o₁ ∨ o₂) :: os
 \end{verbatim}
 
 In addition to the term to evaluate, \texttt{eval} takes a vector of
@@ -503,9 +503,9 @@ booleans \footnote{Do not get confused by the true/false constructors
   of the \texttt{Bool} type and \texttt{Term} types. Agda can
   differentiate between overloaded constructor names according to the
   type they have in context.}
-whose length \texttt{A} is equal to the number of inputs the
+whose length \texttt{inp} is equal to the number of inputs the
 term expects. The return type of the function is another vector of
-bools \texttt{C}, matching the evaluated term's output. Both of these
+bools \texttt{out}, matching the evaluated term's output. Both of these
 properties are of course enforced statically, giving more assurance that
 our algorithm is doing what we expect.
 
@@ -519,17 +519,17 @@ rather than just one or two top elements.
   data Word : Set where
     dup swap pop square : Word
 
-  In : Word → ℕ → ℕ
-  In dup    n = 1 + n
-  In swap   n = 2 + n
-  In pop    n = 1 + n
-  In square n =     n
+  pre : Word → ℕ → ℕ
+  pre dup    n = 1 + n
+  pre swap   n = 2 + n
+  pre pop    n = 1 + n
+  pre square n =     n
 
-  Out : Word → ℕ → ℕ
-  Out dup    n = 2 + n
-  Out swap   n = 2 + n
-  Out pop    n =     n
-  Out square n = n * n
+  post : Word → ℕ → ℕ
+  post dup    n = 2 + n
+  post swap   n = 2 + n
+  post pop    n =     n
+  post square n = n * n
 \end{verbatim}
 
 Operation \texttt{dup} requires a top element to be present and
@@ -541,17 +541,17 @@ languages, but \texttt{square} is a bit more interesting. It requires
 any number of elements to be on the stack. It proceeds to pop all of
 them, then pushes enough copies of the popped stack to equal the
 square of its original size. This manifests itself as the value
-\texttt{n * n} for the \texttt{Out} case of \texttt{square}.
+\texttt{n * n} for the \texttt{post} case of \texttt{square}.
 
 \begin{verbatim}
-  eval : {A C : ℕ} → Term A C → Vec Bool A →
-    Vec Bool C
-  eval (dup :: xs) as with eval xs as
-  ... | c :: cs = c :: c :: cs
-  eval (swap :: xs) as with eval xs as
-  ... | c₂ :: c₁ :: cs = c₁ :: c₂ :: cs
-  eval (pop :: xs) as with eval xs as
-  ... | c :: cs = cs
+  eval : {m n : ℕ} → Term m n → Vec Bool m →
+    Vec Bool n
+  eval (dup :: xs) ms with eval xs ms
+  ... | n :: ns = n :: n :: ns
+  eval (swap :: xs) ms with eval xs ms
+  ... | n₂ :: n₁ :: ns = n₁ :: n₂ :: ns
+  eval (pop :: xs) ms with eval xs ms
+  ... | n :: ns = ns
   eval (_::_ {n = n} square xs) as with eval xs as
   ... | cs = concat (replicate {n = n} cs)
 \end{verbatim}
@@ -564,7 +564,7 @@ and \texttt{concat}s into a single term.
   defining semantics for operations that increase the input stack. }
 We are assured that even in the presence of somewhat complex semantics
 for terms that the resulting arity must match the input/output
-requirements declared by \texttt{In}/\texttt{Out}.
+requirements declared by \texttt{pre}/\texttt{post}.
 
 \section{Genetic Operators}
 
@@ -583,9 +583,9 @@ different outputs according to their contained words. A safe append
 of two terms illustrates the transitive property. 
 
 \begin{verbatim}
-  _++_ : {A B C : ℕ} →
-    Term B C → Term A B →
-    Term A C
+  _++_ : {inp mid out : ℕ} →
+    Term mid out → Term inp mid →
+    Term inp out
   [] ++ ys = ys
   (x :: xs) ++ ys = x :: (xs ++ ys)
 
@@ -595,8 +595,8 @@ of two terms illustrates the transitive property.
   ab : Term 3 2
   ab = and :: []
 
-  abc : Term 3 1
-  abc = bc ++ ab
+  ac : Term 3 1
+  ac = bc ++ ab
 \end{verbatim}
 
 If an attempt is made to append two terms whose input/output
@@ -617,20 +617,20 @@ subsections it was split at. The following is a derivative of the
 \texttt{TakeView} type in \cite{oury:tpop}.
 
 \begin{verbatim}
-  data Split {A C : ℕ} (B : ℕ) :
-    Term A C → Set where
+  data Split {inp out : ℕ} (mid : ℕ) :
+    Term inp out → Set where
     _++'_ :
-      (xs : Term B C)
-      (ys : Term A B) →
+      (xs : Term mid out)
+      (ys : Term inp mid) →
       Split B (xs ++ ys)
 \end{verbatim}
 
 The type above captures exactly how we would like split terms to be
 represented such that they can be transitively recombined. The
-\texttt{B} natural number index reveals the satisfied
-input/output point a term was split at, and the term index is the
+\texttt{mid} natural number index reveals the satisfied
+pre/post condition point a term was split at, and the term index is the
 value we are splitting. The constructor carries the two
-subterms which share \texttt{B} in a way that the resulting type can
+subterms which share \texttt{mid} in a way that the resulting type can
 recombine the two via \texttt{xs ++ ys}.
 
 Given two parent terms split in such a way, crossover needs to produce
@@ -638,12 +638,12 @@ two offspring that swap the subterms at the splits. Functions for both
 of these swaps can be straightforwardly defined.
 
 \begin{verbatim}
-  swap₁ : {A B C : ℕ} {xs ys : Term A C} →
-    Split B xs → Split B ys → Term A C
+  swap₁ : {inp mid out : ℕ} {xs ys : Term inp out} →
+    Split mid xs → Split mid ys → Term inp out
   swap₁ (xs ++' ys) (as ++' bs) = xs ++ bs
 
-  swap₂ : {A B C : ℕ} {xs ys : Term A C} →
-    Split B xs → Split B ys → Term A C
+  swap₂ : {inp mid out : ℕ} {xs ys : Term inp out} →
+    Split mid xs → Split mid ys → Term inp out
   swap₂ (xs ++' ys) (as ++' bs) = as ++ ys
 \end{verbatim}
 
@@ -653,8 +653,8 @@ Given some term and a natural number, we would like to split the term
 at the point indexed into. This function will be the key component of
 determining the split in the female parent of
 crossover. \texttt{Split} is specific enough to tell us the shared
-\texttt{B} between the two subterms. However, for the purposes of this
-function we do not care what \texttt{B} is (actually, we would like
+\texttt{mid} between the two subterms. However, for the purposes of this
+function we do not care what \texttt{mid} is (actually, we would like
 the function to tell us what it is.)
 
 \begin{verbatim}
@@ -681,16 +681,16 @@ unique possible length.
 
 Note the use of an anonymous function in the type. Remember that in DTP
 we can do anything at the type level that we can do at the value
-level, including the use of our ultimate mascot $\lambda$. With this
+level, including the use of the intimately known $\lambda$. With this
 dependent pair trick up our sleeves, we can define \texttt{split}.
 
 \begin{verbatim}
-  split : {A C : ℕ} (n : ℕ) (xs : Term A C) →
-    Σ ℕ (λ B → Split B xs)
+  split : {inp out : ℕ} (n : ℕ) (xs : Term inp out) →
+    Σ ℕ (λ mid → Split mid xs)
   split   zero  xs = _ , [] ++' xs
   split (suc n) [] = _ , [] ++' []
   split (suc n) (x :: xs) with split n xs
-  split (suc A) (x :: ._) | _ , xs ++' ys =
+  split (suc n) (x :: ._) | _ , xs ++' ys =
     _ , (x :: xs) ++' ys
 \end{verbatim}
 
@@ -714,12 +714,12 @@ need to know the length of the female, then choose a random number
 bounded by that length.
 
 \begin{verbatim}
-  length : {A C : ℕ} → Term A C → ℕ
+  length : {inp out : ℕ} → Term inp out → ℕ
   length [] = 0
   length (x :: xs) = suc (length xs)
 
-  splitFemale : {A C : ℕ} → (xs : Term A C) → ℕ →
-    Σ ℕ (λ B → Split B xs)
+  splitFemale : {inp out : ℕ} (xs : Term inp out) → ℕ →
+    Σ ℕ (λ mid → Split mid xs)
   splitFemale xs rand with rand mod (suc (length xs))
   ... | i = split (toℕ i) xs
 \end{verbatim}
@@ -729,21 +729,21 @@ representing the modulus of its two arguments. The definition of this
 function can be found in the supplementary source code, as it is not
 particularly relevant to what we would like to explain.
 
-Based upon the \texttt{B} index at which the female was split, the
+Based upon the \texttt{mid} index at which the female was split, the
 male split can be determined by choosing a random member of all
 possible compatible splits.
 
 \begin{verbatim}
-  splits : {A C : ℕ} (n B : ℕ) (xs : Term A C) →
-    Σ ℕ (λ n → Vec (Split B xs) n)
-  splits zero B xs with split zero xs
-  ... | B' , ys with B =? B'
+  splits : {inp out : ℕ} (n mid : ℕ) (xs : Term inp out) →
+    Σ ℕ (λ n → Vec (Split mid xs) n)
+  splits zero mid xs with split zero xs
+  ... | mid' , ys with mid =? mid'
   ... | yes p rewrite p = _ , ys :: []
-  ... | no p = _ , []
-  splits (suc n) B xs with split (suc n) xs
-  ... | B' , ys with B =? B' | splits n B xs
+  ... | no _ = _ , []
+  splits (suc n) mid xs with split (suc n) xs
+  ... | mid' , ys with mid =? mid' | splits n mid xs
   ... | yes p | _ , yss rewrite p = _ , ys :: yss
-  ... | no p | _ , yss = _ , yss
+  ... | no _ | _ , yss = _ , yss
 \end{verbatim}
 
 \subsubsection{Propositional Equality}
@@ -753,8 +753,8 @@ possible positions of the male term, and filter out ones that would
 not be compatible with respect to transitively appending them back
 together.
 
-It is intuitive that in the algorithm we must compare the target \texttt{B}
-that we are splitting on and the \texttt{B'} in the current
+It is intuitive that in the algorithm we must compare the target \texttt{mid}
+that we are splitting on and the \texttt{mid'} in the current
 split. Normally a comparison of two terms is performed by passing them
 to a function that returns a boolean value, then doing something
 different for the true and false cases. While a boolean value is
@@ -765,16 +765,16 @@ Consider the \texttt{yes p} case (analogous to a typical \texttt{true}
 case) within the \texttt{splits zero} case. We would like to return
 our freshly split \texttt{ys} value, but the type checker won't have
 it. Why not? If we look at the type signature of \texttt{splits}, it
-requires a \texttt{Split B xs}, but \texttt{ys} is a \texttt{Split B'
+requires a \texttt{Split mid xs}, but \texttt{ys} is a \texttt{Split mid'
   xs}. Luckily the \texttt{=?} comparison function returned something
 more than just a boolean, but a constructive proof that both compared
 values were in fact the same. We pass the proof \texttt{p} (pattern
 matched as \texttt{yes p}) to Agda's \texttt{rewrite} keyword to
-convince the type checker that \texttt{ys : Split B' xs} is acceptable
-because \texttt{B ≡ B'}.
+convince the type checker that \texttt{ys : Split mid' xs} is acceptable
+because \texttt{mid ≡ mid'}.
 
 What should you take away from all this? Mainly that the type checker
-needs to be convinced with formal constructive evidence to enforce
+requires formal constructive evidence in order to enforce
 invariants you prescribe. This evidence is in practice easy to work
 with, as it is made of ordinary dependent types like everything
 else. The payoff is confidence; the burden of verifying that
@@ -789,10 +789,10 @@ type-correct splits. However, this function returns a value of type
 compatible split at all.
 
 \begin{verbatim}
-  splitMale : {A C : ℕ} (xs : Term A C) →
-    (B rand : ℕ) → Maybe (Split B xs)
-  splitMale xs B rand
-    with splits (length xs) B xs
+  splitMale : {inp out : ℕ} (xs : Term inp out) →
+    (mid rand : ℕ) → Maybe (Split mid xs)
+  splitMale xs mid rand
+    with splits (length xs) mid xs
   ... | zero , [] = nothing
   ... | suc n , xss
     = just (lookup (rand mod suc n) xss)
@@ -808,12 +808,12 @@ male splits, and return both children using the \texttt{swap}s defined
 earlier.
 
 \begin{verbatim}
-  crossover : {A C : ℕ}
-    (female male : Term A C) (randF randM : ℕ) →
-    Term A C × Term A C
+  crossover : {inp out : ℕ}
+    (female male : Term inp out) (randF randM : ℕ) →
+    Term inp out × Term inp out
   crossover female male randF randM
     with splitFemale female randF
-  ... | B , xs with splitMale male B randM
+  ... | mid , xs with splitMale male mid randM
   ... | nothing = female , male
   ... | just ys = swap₁ xs ys , swap₂ xs ys
 \end{verbatim}
