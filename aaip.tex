@@ -871,9 +871,13 @@ with \texttt{Maybe} (a more typical type used in this kind of situation).
 
 The example above proves that when the output of a term is \texttt{0},
 the precondition for \texttt{not} is unsatisfiable\footnote{A pair of empty
-  parantheses is special Agda syntax used to indicate to the type
+  parantheses is Agda syntax used to indicate to the type
   checker that a value for this type is uninhabitable.}, and shows how
 to find a suitable \texttt{n} for any output greater than zero.
+
+The definition of \texttt{enum-inp} plainly extends type-safe terms
+from the recursive call with the list of words argument (treating
+\texttt{Dec} similar to \texttt{Maybe}/partiality).
 
 \section{Conclusion}
 
