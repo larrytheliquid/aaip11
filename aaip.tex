@@ -437,12 +437,16 @@ syntatictically identical subterm is a property that we will later
 exploit when defining functions to safely split and recombine terms
 for crossover.
 
-\subsection{Generic Terms}
+\subsection{Derivation Abstraction}
 
 When writing functions over term types, it would be tedious to provide
 a case for every word in the language. Correspondingly, we will
 extract the common parts among the constructors of our language into a
-generic term.
+generic term, which can be thought of as abstracting out the typing
+derivation presented above. The trick is to abstract out an explicit
+type for each rule (\texttt{Word}), as well as rule-specific functions
+for the premise/precondition and conclusion/postcondition, yielding a
+simple list-like structure.
 
 \begin{verbatim}
   pre  : Word → ℕ → ℕ
@@ -528,6 +532,8 @@ term expects. The return type of the function is another vector of
 bools \texttt{out}, matching the evaluated term's output. Both of these
 properties are of course enforced statically, giving more assurance that
 our algorithm is doing what we expect.
+
+\subsection{Fitness Function}
 
 Once again, the final algorithm uses a module to accept a general scoring/fitness
 function as a parameter, rather than requiring an evaluation function
@@ -797,6 +803,77 @@ earlier.
 
 In the case where no valid male swap existed, we return the original
 two parents.
+
+\section{Initialization Procedure}
+
+At the onset of our GP run, we would like for our algorithm to operate
+on well-typed candidate programs. As such, the initialization function
+must be sure to only generate random type-correct programs with
+respect to our target program to evolve. By now it should come as now
+surprise that we can and will enforce this requirement statically.
+
+\subsection{Type-Safe Enumeration}
+
+First let us consider the task of enumerating all terms up to some max
+length that conform to a given input stack size.
+
+\begin{verbatim}
+  enum-inp : (n inp : ℕ) → List Word → List (Σ ℕ λ out → Term inp out)
+\end{verbatim}
+
+Dependent pairs are used once again, allowing us to return a list
+that is homogenous for \texttt{inp} but heterogeneous for
+\texttt{out}. In order to implement this we ask the user for a
+function that determines if the precondition for a word that we would
+like to extend a term with can be satisfied by the output of said
+term.
+
+\begin{verbatim}
+  module Initialization
+  (match : (w : Word) (out : ℕ) → Dec (Σ ℕ λ n → out ≡ pre w n))
+  where
+\end{verbatim}
+
+Again, \texttt{Initialization} is another submodule so that the user
+is free to initialize the population by another means. The finale
+\texttt{evolve} function will merely require a population of some
+\texttt{inp} and \texttt{out} and return an evolved population that
+respects those consraints, so the exact method of initialization can
+be variable.
+
+\subsubsection{Decidable Relations}
+
+\texttt{Dec} is a polymorphic type constructor whose values
+represent whether some proof of the type/proposition exists, or
+whether any such proof would lead to bottom (\texttt{⊥} is a type
+without constructors, namely bottom).
+
+\begin{verbatim}
+  data Dec (P : Set) : Set where
+    yes : ( p : P) → Dec P
+    no  : (¬p : P → ⊥) → Dec P
+\end{verbatim}
+
+\texttt{match} uses an existential proposition (dependent
+pair) inside \texttt{Dec}, and is \textit{total} like all Agda functions.
+It effectively requires either a witness that the word's precondition
+satisfies the term's output, or a proof that no satisfying value
+exists. This means that the implementor need not worry about having
+given up the hunt for a suitable \texttt{n} too early, as can happen
+with \texttt{Maybe} (a more typical type used in this kind of situation).
+
+\begin{verbatim}
+  match not zero = no ¬p where
+    ¬p : Σ ℕ (λ n → 0 ≡ suc n) → ⊥
+    ¬p (_ , ())
+  match not (suc n) = yes (n , refl)
+\end{verbatim}
+
+The example above proves that when the output of a term is \texttt{0},
+the precondition for \texttt{not} is unsatisfiable\footnote{A pair of empty
+  parantheses is special Agda syntax used to indicate to the type
+  checker that a value for this type is uninhabitable.}, and shows how
+to find a suitable \texttt{n} for any output greater than zero.
 
 \section{Conclusion}
 
