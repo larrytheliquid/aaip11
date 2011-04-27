@@ -93,7 +93,7 @@ distinction between constants and procedures. Instead, each syntactic
 element is referred to as a ``word''. Every word can be modeled as a
 function which takes the previous stack state as a value and returns
 the subsequent, possibly altered, state. Consider for example a
-small word language in the boolean domain, made up of \texttt{true},
+small word language in the boolean domain, consisting of \texttt{true},
 \texttt{or}, and \texttt{and}. A word
 such as \texttt{true} (that would typically be considered a constant)
 has no requirements on the input stack, and merely returns the input
@@ -104,8 +104,8 @@ back.
 
 For monotypic languages like our example, simple typing rules
 emerge which assign to each word a natural number representing the
-required input stack length, and a second number representing
-the output stack length. A sequence of such words forms a stack
+required input stack length (the precondition), and a second number representing
+the output stack length (the postcondition). A sequence of such words forms a stack
 program, for which an aggregate input/output pair exists.
 
 During genetic operations such as crossover, stack programs must be
@@ -319,8 +319,8 @@ It should come as no suprise that when we implement a type-safe
 version of crossover that we will need to pay close attention to the
 types of terms we are manipulating. Just as \texttt{Vec} had an extra
 natural number parameter for its length, we desire a \texttt{Term}
-type with an extra parameter for the size of the consumed stack, and
-another for the size of the produced stack.
+type with an extra parameter for the size of the consumed/input stack, and
+another for the size of the produced/output stack.
 
 Before showing a generalized list-like \texttt{Term} type for arbitary
 languages, we will take a look at a more traditional embedding of a
@@ -341,14 +341,24 @@ an identity program. Note also that it has no premise, so it can be
 considered a type-theoretical axiom.
 
 The other three constructors are parameterized by a previous
-\texttt{Term} value, representing the premise of each typing rule. The
-\texttt{true} rule states that if we have some term which consumes some
+\texttt{Term} value, representing the premise of each typing rule.
+This \texttt{Term} representation should be understood is as
+follows. When considering \texttt{Term 2 1} as a type alone,
+\texttt{2} and \texttt{3} represent the input and output stack sizes
+respectfully. Within the context of a constructor with a \texttt{Term}
+premise, the ``output'' position of the premise represents that word's
+\textit{precondition} while the ``output'' position of the conclusion
+represent's the word's \textit{postcondition}.
+
+The \texttt{true} rule states that if we have some term which consumes some
 value \texttt{inp}, and produces another arbitrary value \texttt{out},
 then the conclusion allows us to infer the existence of another term
-which has the same input and one additional output. In fact, we can
-see that within any given subterm the \texttt{inp} input remains the same.
+which has the same input and one additional output. In other words,
+\texttt{true} has a precondition that will always hold and a
+postcondition stating that the value in the precondition will be
+incremented by one.
 
-In the \texttt{not} rule the premise requires that the previous output
+In the \texttt{not} rule the premise's precondition requires that the previous output
 be more than just any arbitrary \texttt{out}. Instead, the previous output
 stack size must be at least one, but can be greater. Because the
 \texttt{out} parameter was given in braces, Agda treats this as an
@@ -356,7 +366,7 @@ implicit argument that can be unified/inferred according to other
 types in context. In this way, \texttt{1 + out} can represent several
 values such as \texttt{1 + 0} or \texttt{1 + 7}. The conclusion of
 \texttt{not} allows us to infer the existence of the another term of
-the same output stack size (\texttt{1 + out}). This fits with our informal mental
+output stack size \texttt{1 + out}. This fits with our informal mental
 model of \texttt{not} requiring at least one argument to pop off the
 stack, and pushing the logical negation back on.
 
@@ -508,63 +518,6 @@ term expects. The return type of the function is another vector of
 bools \texttt{out}, matching the evaluated term's output. Both of these
 properties are of course enforced statically, giving more assurance that
 our algorithm is doing what we expect.
-
-\subsection{Richer Languages}
-
-The representation used can be extended to more complex languages,
-including operations that use the entire current stack as the input
-rather than just one or two top elements.
-
-\begin{verbatim}
-  data Word : Set where
-    dup swap pop square : Word
-
-  pre : Word → ℕ → ℕ
-  pre dup    n = 1 + n
-  pre swap   n = 2 + n
-  pre pop    n = 1 + n
-  pre square n =     n
-
-  post : Word → ℕ → ℕ
-  post dup    n = 2 + n
-  post swap   n = 2 + n
-  post pop    n =     n
-  post square n = n * n
-\end{verbatim}
-
-Operation \texttt{dup} requires a top element to be present and
-duplicates it, \texttt{swap} requires two elements to be present and
-pushes them back on in swapped order (keeping the net stack size the
-same), and \texttt{pop} requires one element to be on the stack and
-removes it. Those three should be familiar to programmers of stack
-languages, but \texttt{square} is a bit more interesting. It requires
-any number of elements to be on the stack. It proceeds to pop all of
-them, then pushes enough copies of the popped stack to equal the
-square of its original size. This manifests itself as the value
-\texttt{n * n} for the \texttt{post} case of \texttt{square}.
-
-\begin{verbatim}
-  eval : {m n : ℕ} → Term m n → Vec Bool m →
-    Vec Bool n
-  eval (dup :: xs) ms with eval xs ms
-  ... | n :: ns = n :: n :: ns
-  eval (swap :: xs) ms with eval xs ms
-  ... | n₂ :: n₁ :: ns = n₁ :: n₂ :: ns
-  eval (pop :: xs) ms with eval xs ms
-  ... | n :: ns = ns
-  eval (_::_ {n = n} square xs) as with eval xs as
-  ... | cs = concat (replicate {n = n} cs)
-\end{verbatim}
-
-The only case here worth drawing attention to is that of
-\texttt{square}, which \texttt{replicate}s the output stack n times
-and \texttt{concat}s into a single term.
-\footnote{For dependently typed programmers, it should be pointed out
-  that our representation does not run into termination issues when
-  defining semantics for operations that increase the input stack. }
-We are assured that even in the presence of somewhat complex semantics
-for terms that the resulting arity must match the input/output
-requirements declared by \texttt{pre}/\texttt{post}.
 
 \section{Genetic Operators}
 
