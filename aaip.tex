@@ -483,6 +483,16 @@ natural numbers in their types.
   andAnd = and :: and :: []
 \end{verbatim}
 
+Finally, we should note that the final implementation defines
+\texttt{Word}, \texttt{pre}, and \texttt{post} to be module
+parameters, so that the library itself is not tied to a particular
+language to evolve.
+
+\begin{verbatim}
+  module Stash (Word : Set) (In Out : Word → ℕ → ℕ) where
+  ...
+\end{verbatim}
+
 \section{Evaluation Function}
 
 When comparing relative performance between evolved terms, one
@@ -518,6 +528,20 @@ term expects. The return type of the function is another vector of
 bools \texttt{out}, matching the evaluated term's output. Both of these
 properties are of course enforced statically, giving more assurance that
 our algorithm is doing what we expect.
+
+Once again, the final algorithm uses a module to accept a general scoring/fitness
+function as a parameter, rather than requiring an evaluation function
+tied to specific fitness cases. Here \texttt{Evolution} is a submodule
+of \texttt{Stash}, so terms can be defined and played with without
+necessarily defining a scoring function for program evolution.
+
+\begin{verbatim}
+  module Evolution {ins outs : ℕ} (score : Term ins outs → ℕ) where
+\end{verbatim}
+
+Of course, typically \texttt{score} is defined to use an evaluation
+function such as the one defined above, but it may take other things
+into account (e.g. size of terms).
 
 \section{Genetic Operators}
 
