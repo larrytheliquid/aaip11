@@ -473,7 +473,7 @@ parameters, so that the library itself is not tied to a particular
 language to evolve.
 
 \begin{verbatim}
-  module Stash (Word : Set) (In Out : Word → ℕ → ℕ) where
+  module DTGP (Word : Set) (pre post : Word → ℕ → ℕ) where
   ...
 \end{verbatim}
 
@@ -517,11 +517,11 @@ our algorithm is doing what we expect.
 Once again, the final algorithm uses a module to accept a general scoring/fitness
 function as a parameter, rather than requiring an evaluation function
 tied to specific fitness cases. Here \texttt{Evolution} is a submodule
-of \texttt{Stash}, so terms can be defined and manipulated without
+of \texttt{DTGP}, so terms can be defined and manipulated without
 necessarily defining a scoring function for program evolution.
 
 \begin{verbatim}
-  module Evolution {ins outs : ℕ} (score : Term ins outs → ℕ) where
+  module Evolution {inp out : ℕ} (score : Term inp out → ℕ) where
 \end{verbatim}
 
 Of course, typically \texttt{score} is defined to use an evaluation
@@ -872,7 +872,7 @@ GP within the context of dependently typed programming.
 
 The boolean language used in all the examples\footnote{Example code
   for what is described above and some extensions below can
-  be found at http://github.com/larrytheliquid/Stash/tree/aaip11
+  be found at http://github.com/larrytheliquid/dtgp/tree/aaip11
 } is of course just a toy,
 and more interesting languages can be encoded. Constructors of
 \texttt{Word} support parameterization. For example, \texttt{nat : ℕ →
