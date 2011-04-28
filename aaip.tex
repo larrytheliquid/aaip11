@@ -18,7 +18,7 @@
 
 \mainmatter  % start of an individual contribution
 
-\title{[DRAFT] Verified Stack-Based Genetic Programming\\
+\title{Verified Stack-Based Genetic Programming\\
 via Dependent Types}
 % a short form should be given in case it is too long for the running head
 \titlerunning{Verified Stack-Based GP via Dependent Types}
@@ -902,7 +902,10 @@ GP within the context of dependently typed programming.
 
 \subsection{Last Remarks}
 
-The boolean language used in all the examples is of course just a toy,
+The boolean language used in all the examples\footnote{Example code
+  for what is described above and some extensions below can
+  be found at http://github.com/larrytheliquid/Stash/tree/aaip11
+} is of course just a toy,
 and more interesting languages can be encoded. Constructors of
 \texttt{Word} support parameterization. For example, \texttt{nat : ℕ →
   Word} could be used to support a single constructor for all natural
