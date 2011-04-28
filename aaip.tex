@@ -809,16 +809,23 @@ two parents.
 At the onset of our GP run, we would like for our algorithm to operate
 on well-typed candidate programs. As such, the initialization function
 must be sure to only generate random type-correct programs with
-respect to our target program to evolve. By now it should come as now
-surprise that we can and will enforce this requirement statically.
+respect to our target program. By now it should come as now
+surprise that we can and will enforce this requirement
+statically. Below a simple type-safe enumeration and filter strategy
+is adopted.
 
-\subsection{Type-Safe Enumeration}
+\subsection{Type-Safe Enumeration \& Filter}
 
-First let us consider the task of enumerating all terms up to some max
-length that conform to a given input stack size.
+First we would like to enumerate all terms up to some max length that
+conform to a given input stack size, \texttt{enum-inp}. Then
+\texttt{filter-out} filters this result to only include terms that
+match the desired output stack size as well. The final list can be
+used as a pool to randomly select our population from.
 
 \begin{verbatim}
   enum-inp : (n inp : ℕ) → List Word → List (Σ ℕ λ out → Term inp out)
+  filter-out : {inp : ℕ} (out : ℕ) →
+    List (Σ ℕ λ out → Term inp out) → List (Term inp out)
 \end{verbatim}
 
 Dependent pairs are used once again, allowing us to return a list
@@ -835,11 +842,7 @@ term.
 \end{verbatim}
 
 Again, \texttt{Initialization} is another submodule so that the user
-is free to initialize the population by another means. The finale
-\texttt{evolve} function will merely require a population of some
-\texttt{inp} and \texttt{out} and return an evolved population that
-respects those consraints, so the exact method of initialization can
-be variable.
+is free to initialize the population by another means.
 
 \subsubsection{Decidable Relations}
 
@@ -877,7 +880,10 @@ to find a suitable \texttt{n} for any output greater than zero.
 
 The definition of \texttt{enum-inp} plainly extends type-safe terms
 from the recursive call with the list of words argument (treating
-\texttt{Dec} similar to \texttt{Maybe}/partiality).
+\texttt{Dec} similar to
+\texttt{Maybe}/partiality). \texttt{filter-out} is implemented even
+more straightforwardly, once again using \texttt{=?} to prove that the
+desired output is equal to what is returned.
 
 \section{Conclusion}
 
