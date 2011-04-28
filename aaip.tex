@@ -8,12 +8,8 @@
 \usepackage[utf8]{inputenc}
 
 \usepackage{url}
-\urldef{\mailsa}\path|{alfred.hofmann, ursula.barth, ingrid.haas, frank.holzwarth,|
-\urldef{\mailsb}\path|anna.kramer, leonie.kunz, christine.reiss, nicole.sator,|
-\urldef{\mailsc}\path|erika.siebert-cole, peter.strasser, lncs}@springer.com|    
 \newcommand{\keywords}[1]{\par\addvspace\baselineskip
 \noindent\keywordname\enspace\ignorespaces#1}
-
 \begin{document}
 
 \mainmatter  % start of an individual contribution
@@ -24,7 +20,6 @@ via Dependent Types}
 \titlerunning{Verified Stack-Based GP via Dependent Types}
 
 \author{Larry Diehl}
-
 \institute{\url{http://github.com/larrytheliquid}}
 
 \maketitle
@@ -123,16 +118,10 @@ Dependently typed languages have the distinguishing characteristic
 that arguments in type signatures may be assigned labels (similar to
 variable names), to be used elsewhere in type signature to declare
 \textit{dependencies} between types and values. This paper will use the
-dependently typed programming language Agda \cite{norell:agdatut} for
-all of its examples, but it should be possible to translate examples
+dependently typed purely functional programming language Agda \cite{norell:agdatut} for
+all of its examples. \footnote{It should be possible to translate examples
 to similar languages such as Epigram \cite{mcbride:epigram} or
-Idris \cite{brady:idris}.
-
-Agda is a purely functional language (the most popular example being
-Haskell \cite{spj:haskell}), in which effectful code is made explicit via
-types. This has the effect of making the implementation of pure algorithms
-more understandable, and complicated reasoning required to trace side
-effects can be isolated to a small corner of the final program.
+Idris \cite{brady:idris}.}
 
 At compile time, Agda programs must pass two checks to prove their
 totality. Termination checking is accomplished by checking
@@ -143,10 +132,7 @@ Consequently, Agda programs do not fail to terminate
 \footnote{Agda programs can succeed to not terminate via
   coinductive definition and corecursion, if controlled
   non-termination is what we want.}
-or crash due to unexpected input. This meta-theoretical property of
-the language is convenient if we want to model the evolution of
-partially defined programs, without having to worry about confusing object
-language partiality with host language partiality.
+or crash due to unexpected input.
 
 As a rule of thumb, an Agda programmer can ignore the traditional
 distinction between compile time and runtime computations. In
@@ -243,8 +229,7 @@ length.
 \begin{verbatim}
   data Vec (A : Set) : ℕ → Set where
     []  : Vec A zero
-    _::_ : {n : ℕ} → A → Vec A n →
-      Vec A (suc n)
+    _::_ : {n : ℕ} → A → Vec A n → Vec A (suc n)
 
   Population : ℕ → Set
   Population n = Vec Term n
@@ -289,8 +274,7 @@ the lookup index type and the vector positions.
     zero : {n : ℕ} → Fin (suc n)
     suc  : {n : ℕ} → Fin n → Fin (suc n)
 
-  lookup : {A : Set} {n : ℕ} →
-    Fin n → Vec A n → A
+  lookup : {A : Set} {n : ℕ} → Fin n → Vec A n → A
   lookup    zero (x :: xs) = x
   lookup (suc i) (x :: xs) = lookup i xs
 \end{verbatim}
@@ -460,10 +444,7 @@ simple list-like structure.
 
   data Term (inp : ℕ) : ℕ → Set where
     []  : Term inp inp
-
-    _::_ : {n : ℕ} (w : Word) →
-      Term inp (pre w n) →
-      Term inp (post w n)
+    _::_ : {n : ℕ} (w : Word) → Term inp (pre w n) → Term inp (post w n)
 \end{verbatim}
 
 Just like a \texttt{List} or a \texttt{Vec}, our new \texttt{Term} now
@@ -508,8 +489,7 @@ uses the structurally smaller tail of the input term in recursive
 calls.
 
 \begin{verbatim}
-  eval : {inp out : ℕ} → Term inp out → Vec Bool inp →
-    Vec Bool out
+  eval : {inp out : ℕ} → Term inp out → Vec Bool inp → Vec Bool out
   eval [] is = is
   eval (true :: xs) is = true :: eval xs is
   eval (false :: xs) is = false :: eval xs is
@@ -564,9 +544,7 @@ different outputs according to their contained words. A safe append
 of two terms illustrates the transitive property. 
 
 \begin{verbatim}
-  _++_ : {inp mid out : ℕ} →
-    Term mid out → Term inp mid →
-    Term inp out
+  _++_ : {inp mid out : ℕ} → Term mid out → Term inp mid → Term inp out
   [] ++ ys = ys
   (x :: xs) ++ ys = x :: (xs ++ ys)
 
@@ -600,10 +578,7 @@ subsections it was split into. The following is a derivative of the
 \begin{verbatim}
   data Split {inp out : ℕ} (mid : ℕ) :
     Term inp out → Set where
-    _++'_ :
-      (xs : Term mid out)
-      (ys : Term inp mid) →
-      Split B (xs ++ ys)
+    _++'_ : (xs : Term mid out) (ys : Term inp mid) → Split B (xs ++ ys)
 \end{verbatim}
 
 The type above captures exactly how we would like split terms to be
