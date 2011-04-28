@@ -900,6 +900,29 @@ Hopefully the examples presented herein can serve as a template to
 assist authors in encoding invariants for their particular flavors of
 GP within the context of dependently typed programming.
 
+\subsection{Last Remarks}
+
+The boolean language used in all the examples is of course just a toy,
+and more interesting languages can be encoded. Constructors of
+\texttt{Word} support parameterization. For example, \texttt{nat : ℕ →
+  Word} could be used to support a single constructor for all natural
+numbers. Further, since the initialization functions just take a list
+of words, ephemeral random constant-like behavior is supported by
+including multiple such instantiations in an argument
+(e.g. \texttt{nat 1 :: nat 2 :: nat 3 :: plus :: times :: []}). 
+
+The functions described herein explicitly passed around random
+numbers. This was fine to illustrate the examples, but the final code
+instead uses a simple \texttt{State} monad containing a random number
+seed for increased modularity and to avoid mistakenly reusing a random
+number.
+
+Finally, the techniques trivially extend to languages with multiple
+type stacks by parameterizing the main module over the domain type
+(e.g. ℕ × ℕ), and providing a decision procedure for said type. Taking
+this technique further to evolve with arbitrary typing relations,
+rather than these Forth-like stacks, is currently under investiation.
+
 \bibliographystyle{abbrv}
 \bibliography{aaip}
 
