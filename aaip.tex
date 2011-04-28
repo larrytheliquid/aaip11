@@ -31,18 +31,18 @@ via Dependent Types}
 \begin{abstract}
 Genetic Programming (GP) can act as a powerful search tool for many
 classes of problems. Much research has been done exploring the
-effectiveness of  various term representations, genetic operators, and
+effectiveness of various term representations, genetic operators, and
 techniques for intelligently navigating the search space by taking
-type information into account. This paper explores the less trodden
-road of formally capturing invariants normally assumed in GP
+type information into account. This paper explores the less familiar
+concept of formally capturing the invariants typically assumed by GP
 implementations. Dependently Typed Programming (DTP) extends the
 type-level expressiveness normally available in functional programming
 languages to arbitrary propositions in intuitionistic logic. We use
 DTP to express and enforce \textit{semantic} invariants relevant to GP
 at the level of types, with a special focus on type-safe crossover for
 strongly typed stack-based GP. Given the complexity involved in GP
-implementations and the potential for bugs, we hope to help
-researchers avoid errorneously attributing evolutionary explanations
+implementations and the potential for introducing logic and runtime errors, we hope to help
+researchers avoid erroneously attributing evolutionary explanations
 to GP run phenomena by using a verified implementation. 
 \keywords{genetic programming, dependent types, functional
   programming, formal verification}
@@ -52,10 +52,10 @@ to GP run phenomena by using a verified implementation.
 
 While the earliest work in Genetic Programming used tree structures as
 candidate solutions to a problem, many alternative representations
-have been developed since (linear, graph, grammar-based, etc). The
+have been developed since (\textit{e.g.}, linear, graph, grammar-based). The
 goal of this work is not to come up with a novel GP algorithm with
 respect to evolutionary performance, but rather give an example of a
-non-trivial but verified and simple to understand GP implementation.
+non-trivial but verified and simple-to-understand GP implementation.
 
 Flat linear structures are conceptually simpler than nested trees and
 intimately familiar to functional programmers, yet still provide
@@ -67,44 +67,44 @@ After a general overview of stack languages and dependent types, the
 structure of the paper will follow a common classification scheme for
 GP:
 \begin{itemize}
-\item{\textbf{parameters:}} Starting with a non-dependently typed
-  representation, we will see how to use standard affair dependent
+\item{\textbf{parameters:}} We will start with a non-dependently typed
+  representation, and investigate how to use standard affair dependent
   typing to ensure the population size parameter is adhered to.
-\item{\textbf{representation:}} Next we will see how to modify our
+\item{\textbf{representation:}} We will then modify our
   term representation to use precise dependent types, encoding arity
   information in the types of candidate programs.
-\item{\textbf{evaluation function:}} Taking advantage of the host
-  language's totality requirement, we'll see how easy it is to write
+\item{\textbf{evaluation function:}} We will then introduce
   an evaluation function for evolved terms that is assured to
-  terminate and not otherwise diverge.
-\item{\textbf{genetic operators:}} Next we will encode
+  terminate and not otherwise diverge, by taking advantage of the host
+  language's totality requirement.
+\item{\textbf{genetic operators:}} We will then encode
   the property of transitivity into the types of functions related to
   crossover, ensuring that ill-typed programs never enter the
   population.
-\item{\textbf{initialization procedure:}} Finally we will show a basic
-  procedure to initialize our population, making sure to only randomly
+\item{\textbf{initialization procedure:}} Finally, we will illustrate a basic
+  procedure to initialize our population, taking care to only randomly
   select programs that match the type signature of the goal program.
 \end{itemize}
 
 \subsection{Stack Languages}
 
 In stack-based languages such as Forth \cite{kelly:forth} there is no
-distinction between constants and procedures. Instead, each syntactic
+distinction made between ``constants'' and ``procedures''. Instead, each syntactic
 element is referred to as a ``word''. Every word can be modeled as a
 function which takes the previous stack state as a value and returns
-the subsequent, possibly altered, state. Consider for example a
-small word language in the boolean domain, consisting of \texttt{true},
-\texttt{or}, and \texttt{and}. A word
+the subsequent, possibly altered, state. For example, consider a
+small language in the boolean domain, consisting of \texttt{true},
+\texttt{not}, and \texttt{and}. A word
 such as \texttt{true} (that would typically be considered a constant)
 has no requirements on the input stack, and merely returns the input
 stack plus a boolean value of ``true'' pushed on top. On the other
 hand, \texttt{and} requires the input stack to have at least two elements,
-which it pops off in order to push their logical conjunction
-back.
+which it pops off and evaluates before pushing their logical conjunction back
+onto the stack to replace them.
 
 For monotypic languages like our example, simple typing rules
-emerge which assign to each word a natural number representing the
-required input stack length (the precondition), and a second number representing
+emerge which assign two natural numbers to each each word. The first represents the
+required input stack length (the precondition), while the second represents
 the output stack length (the postcondition). A sequence of such words forms a stack
 program, for which an aggregate input/output pair exists.
 
@@ -140,16 +140,16 @@ for structurally decreasing recursive calls. Coverage checking is
 accomplished by requiring that every type-correct value of a function's
 arguments is accounted for in the function's definition.
 Consequently, Agda programs do not fail to terminate
-\footnote{Although Agda programs can succeed to not terminate via
+\footnote{Agda programs can succeed to not terminate via
   coinductive definition and corecursion, if controlled
   non-termination is what we want.}
 or crash due to unexpected input. This meta-theoretical property of
-our language is convenient if we wanted to model evolution of
-partially defined programs, without having to worry confusing object
+the language is convenient if we want to model the evolution of
+partially defined programs, without having to worry about confusing object
 language partiality with host language partiality.
 
-Finally, as a rule of thumb an Agda programmer forgets the traditional
-distinction between what can be computed at compile time versus runtime. In
+As a rule of thumb, an Agda programmer can ignore the traditional
+distinction between compile time and runtime computations. In
 particular, any ``value level'' function can be used at the type level
 as well.
 
@@ -163,7 +163,7 @@ dependent types.
 
 \subsection{Population List}
 
-First let's create a new type representing the possible words to be
+First, let's create a new type representing the possible words to be
 used for some evolutionary problem.
 
 \begin{verbatim}
@@ -172,7 +172,7 @@ used for some evolutionary problem.
 \end{verbatim}
 
 This simple example language is intended to operate on the boolean domain using
-well-known constants and functions. Of course a stack program is not
+well-known constants and functions. Of course, a stack program is not
 merely a single word, but a sequence of them that we would like to
 execute in order. The familiar cons-based list can serve as a
 container for several words, so let us type it out.
@@ -190,7 +190,7 @@ Notice in particular the \texttt{A : Set} part of the list
 type. \texttt{Set} is the type of types in Agda, and \texttt{A} is
 a label that acts like a variable, but at the level of type
 signatures. In other words, we have created a polymorphic list type
-which is parameterized by what kind of data it can
+which is parameterized by the kind of data it can
 contain. \texttt{Term} is a specific instantiation of lists that can
 hold the \texttt{Word}s of our example language. Below are some
 examples of programs we can now represent.
@@ -221,18 +221,18 @@ invariant with the help of dependent types. Namely, the population
 that GP acts upon is expected to be a certain size, and it should stay
 that size as GP progresses from one generation to the next. Given the
 sum complexity due to initialization, selection, and genetic
-operators, it would not be surprising if a GP implementation had a bug
-that caused the population to be bigger or smaller than expected
-at some point in the run. Population size of course affects search
-space, so conclusions drawn from GP run data that was affected by a
-population size bug would be incorrect.
+operators, it would not be surprising if a GP implementation introduced a flaw
+that caused the population to increase or decrease from the expected total
+at some point in the run. Of course, population size affects search
+space, so GP run data influenced by a fluctuation in population size would be
+potentially misleading.
 
 \subsection{Population Vector}
 
 In the dependently typed world, an easy and effective way to ensure
 that some invariant is held is to create a type that can only possibly
 construct values that satisfy said invariant
-(``correctness-by-construction''). In our case we would
+(``correctness-by-construction''). In our case, we would
 like the population size parameter to be some natural number
 that we specify when configuring the run. This brings us to one of
 the canonical examples of a dependent type, the vector. We have
@@ -251,7 +251,7 @@ length.
 \end{verbatim}
 
 The empty vector has a constant length of \texttt{zero}. The length of a vector
-produced by cons is the \texttt{suc}cessor of whatever the length of
+produced by ``cons'' is the \texttt{suc}cessor of whatever the length of
 the tail is. Given such an inductive definition of a type, the natural
 number index of any given vector can be nothing but its length. Just
 like our definition of \texttt{Term}, \texttt{Population} is just a
@@ -267,21 +267,20 @@ earlier.
 
 Once again, note that the type requires a population of exactly three
 terms. If we were to supply any more or less, a type error would occur at
-compile time. Effectively we move checking of certain \textit{semantic}
+compile time. We have effectively moved checking of certain \textit{semantic}
 properties of our program to compile time, meaning much less can go
-wrong once a program can be run.
-\footnote{In fact, the only thing
-  that can go wrong are logic errors due to bad encodings by the
-  programmer. Typical runtime errors due to non-termination or lack of
-  coverage are disallowed by the compiler.}
+wrong while the program is running.
+\footnote{In fact, the only other causes for concern are logic errors
+  due to bad encodings by the programmer. Typical runtime errors due to
+  non-termination or lack of coverage are disallowed by the compiler.}
 
-Now that we've seen how to construct a dependent type, let's see how
+Now that we have seen how to construct a dependent type, let us see how
 a function operating on \texttt{Vec} can make use of its properties.
 During selection, GP will need to retrieve a candidate program from
-the population. An all too common error taught even at introductory
-level programming is indexing outside the bounds of a container
-structure. How might one prevent this error? Ideally the type of the
-parameter used to lookup a member should have exactly as many values
+the population. An all-too-common error (taught even in introductory
+level programming courses) is indexing outside the bounds of a container
+structure. What means do we have to prevent this from occurring? Ideally,
+the type of the parameter used to lookup a member should have exactly as many values
 as the length of our vector. This way, a bijection would exist between
 the lookup index type and the vector positions.
 
@@ -301,28 +300,28 @@ values for any \texttt{Fin n}. In the \texttt{lookup} function the
 natural number index is shared between the finite set and vector
 parameters. The effect of this sharing is that every finite set
 argument has exactly as many possible constructions as the length of
-the vector argument, statically preventing any index out of bounds
-errors from occuring. Since our \texttt{Population} is merely a
+the vector argument, statically preventing any ``index out of bounds''
+errors from occurring. Since our \texttt{Population} is merely a
 specific kind of vector, we are able to use the safe \texttt{lookup}
 when defining a function for the selection process.
 
 \section{Representation}
 
 In the previous section we represented the terms in our population as
-unadorened lists of words. In order to perform type-safe crossover in
+unadorned lists of words. In order to perform type-safe crossover in
 a manner described by \cite{tchernev:forthcross}, the type of our
 terms will need to be more telling.
 
 \subsection{Typing Derivation}
 
-It should come as no suprise that when we implement a type-safe
-version of crossover that we will need to pay close attention to the
-types of terms we are manipulating. Just as \texttt{Vec} had an extra
+It should come as no surprise that when we implement a type-safe
+version of crossover, we will need to pay close attention to the
+types of the terms that we are manipulating. Just as \texttt{Vec} had an extra
 natural number parameter for its length, we desire a \texttt{Term}
 type with an extra parameter for the size of the consumed/input stack, and
 another for the size of the produced/output stack.
 
-Before showing a generalized list-like \texttt{Term} type for arbitary
+Before showing a generalized list-like \texttt{Term} type for arbitrary
 languages, we will take a look at a more traditional embedding of a
 typing relation into Agda.
 
@@ -336,14 +335,14 @@ typing relation into Agda.
 
 Recall that the first parameter is the consumed stack size and the second
 is the produced stack size. The empty term \texttt{[]} consumes
-some value \texttt{inp} and produces a stack of same size, acting as
+some value \texttt{inp} and produces a stack of the same size, acting as
 an identity program. Note also that it has no premise, so it can be
 considered a type-theoretical axiom.
 
 The other three constructors are parameterized by a previous
 \texttt{Term} value, representing the premise of each typing rule.
-This \texttt{Term} representation should be understood is as
-follows. When considering \texttt{Term 2 1} as a type alone,
+This \texttt{Term} representation should be understood as
+follows: When considering \texttt{Term 2 1} as a type alone,
 \texttt{2} and \texttt{3} represent the input and output stack sizes
 respectfully. Within the context of a constructor with a \texttt{Term}
 premise, the ``output'' position of the premise represents that word's
@@ -358,7 +357,7 @@ which has the same input and one additional output. In other words,
 postcondition stating that the value in the precondition will be
 incremented by one.
 
-In the \texttt{not} rule the premise's precondition requires that the previous output
+In the \texttt{not} rule, the premise's precondition requires that the previous output
 be more than just any arbitrary \texttt{out}. Instead, the previous output
 stack size must be at least one, but can be greater. Because the
 \texttt{out} parameter was given in braces, Agda treats this as an
@@ -370,7 +369,7 @@ output stack size \texttt{1 + out}. This fits with our informal mental
 model of \texttt{not} requiring at least one argument to pop off the
 stack, and pushing the logical negation back on.
 
-Finally, \texttt{and} follows the same pattern except it requires at
+Finally, \texttt{and} follows the same pattern, except it requires at
 least two values and produces just one, leaving the output stack size exactly
 one less than what it was previously.
 
@@ -400,7 +399,7 @@ two values and produces one, which satisfies one of the second
 \texttt{Term 3 1}.
 
 We can highlight that the input stack remains constant throughout
-subterms with an exploded view of each of the subterms in
+subterms, with an exploded view of each of the subterms in
 \texttt{andAnd}.
 
 \begin{verbatim}
@@ -416,7 +415,7 @@ subterms with an exploded view of each of the subterms in
 
 \subsection{Syntactic Non-Uniqueness}
 
-To avoid confusion, we will point out that in our representation
+To avoid confusion, we will point out that in our representation,
 multiple syntactically identical terms can have different
 types. Specifically, what can change is the original number of
 arguments on the stack that the bottommost empty constructor provides.
@@ -433,7 +432,7 @@ arguments on the stack that the bottommost empty constructor provides.
 \end{verbatim}
 
 Being able to represent multiple different types with a
-syntatictically identical subterm is a property that we will later
+syntactically identical subterm is a property that we will later
 exploit when defining functions to safely split and recombine terms
 for crossover.
 
@@ -523,9 +522,9 @@ calls.
 \end{verbatim}
 
 In addition to the term to evaluate, \texttt{eval} takes a vector of
-booleans \footnote{Do not get confused by the true/false constructors
+booleans \footnote{Do not be confused by the true/false constructors
   of the \texttt{Bool} type and \texttt{Term} types. Agda can
-  differentiate between overloaded constructor names according to the
+  differentiate between overloaded constructor names, according to the
   type they have in context.}
 whose length \texttt{inp} is equal to the number of inputs the
 term expects. The return type of the function is another vector of
@@ -538,7 +537,7 @@ our algorithm is doing what we expect.
 Once again, the final algorithm uses a module to accept a general scoring/fitness
 function as a parameter, rather than requiring an evaluation function
 tied to specific fitness cases. Here \texttt{Evolution} is a submodule
-of \texttt{Stash}, so terms can be defined and played with without
+of \texttt{Stash}, so terms can be defined and manipulated without
 necessarily defining a scoring function for program evolution.
 
 \begin{verbatim}
@@ -551,11 +550,10 @@ into account (e.g. size of terms).
 
 \section{Genetic Operators}
 
-When writing genetic operators, for example
-Tchnernev's \cite{tchernev:forthcross} 1-point crossover, we need to take
-subsections of different terms and recombine them in a safe
-matter. Tchernev points out that we need to split parent terms at a
-point of equal output stacks to achieve safe recombination. But,
+When writing genetic operators, \textit{e.g.} Tchnernev's \cite{tchernev:forthcross}
+1-point crossover, we need to take subsections of different terms and recombine
+them in a safe manner. Tchernev points out that we need to split parent terms at a
+point of equal output stacks to achieve safe recombination. This leads to a question:
 what is the criterion for a safe append of two arbitrary terms after
 they have been split in this manner?
 
@@ -582,21 +580,21 @@ of two terms illustrates the transitive property.
   ac = bc ++ ab
 \end{verbatim}
 
-If an attempt is made to append two terms whose input/output
-requirements do not satisfy each other, a compile error will
+If an attempt is made to append two terms whose input and output
+requirements do not satisfy one another, a compile error will
 occur. Using a function with a such an informative type gives a high
-degree of confidence that we are doing the right thing when used
-inside another function such as crossover. In fact, as we shall soon
-see the type of this function gives us more than just confidence.
+degree of confidence that we are doing the right thing, when used
+inside another function such as a crossover. As we shall soon
+see, the type of this function in fact gives us more than simple confidence.
 
 \subsection{Transitive Split}
 
 Now that we have a function to safely recombine terms in a transitive
 way, we need to come up with a compatible way to split a crossover
 parent. In DTP a \textit{view} \cite{mcbride:viewleft} is a general technique for using a
-specialized type to reveal structure about another type. In our case
+specialized type to reveal structural information about another type. In our case,
 we want to view a term as another type representing the two
-subsections it was split at. The following is a derivative of the
+subsections it was split into. The following is a derivative of the
 \texttt{TakeView} type in \cite{oury:tpop}.
 
 \begin{verbatim}
@@ -609,7 +607,7 @@ subsections it was split at. The following is a derivative of the
 \end{verbatim}
 
 The type above captures exactly how we would like split terms to be
-represented such that they can be transitively recombined. The
+represented, such that they can be transitively recombined. The
 \texttt{mid} natural number index reveals the satisfied
 pre/post condition point a term was split at, and the term index is the
 value we are splitting. The constructor carries the two
@@ -633,12 +631,12 @@ of these swaps can be straightforwardly defined.
 \subsubsection{Dependent Pairs}
 
 Given some term and a natural number, we would like to split the term
-at the point indexed into. This function will be the key component of
-determining the split in the female parent of
+at an indexed position represented by the number. This function will be the key
+to determining the split in the female parent of a
 crossover. \texttt{Split} is specific enough to tell us the shared
 \texttt{mid} between the two subterms. However, for the purposes of this
-function we do not care what \texttt{mid} is (actually, we would like
-the function to tell us what it is.)
+function, we do not care what \texttt{mid} is (we would actually like for
+the function to determine the split point for us).
 
 \begin{verbatim}
   data Σ (A : Set) (B : A → Set) : Set where
@@ -648,11 +646,10 @@ the function to tell us what it is.)
 A non-dependent pair, or tuple, carries 2 values of arbitrary
 types. In the dependent version of pairs, the \textit{value} in the first
 component is used to determine the \textit{type} in the second
-component. One dependently typed programming technique is using a
-dependent pair to hide the index type of a return value when you don't
-know or care what it will be. For example, sometimes we would merely
-like to write down a vector value and have the compiler figure out the
-unique possible length.
+component. One common DTP technique is to use a dependent pair to
+hide the index type of a return value when you don't know or care what it will
+be. For example, sometimes we would merely like to write down a vector
+value and have the compiler determine the unique possible length.
 
 \begin{verbatim}
   specifiedLength : Σ ℕ (λ n → Vec Bool n)
@@ -664,8 +661,8 @@ unique possible length.
 
 Note the use of an anonymous function in the type. Remember that in DTP
 we can do anything at the type level that we can do at the value
-level, including the use of the intimately known $\lambda$. With this
-dependent pair trick up our sleeves, we can define \texttt{split}.
+level, including the use of the intimately-known $\lambda$. With this
+dependent pair trick up our sleeves, we are prepared to define \texttt{split}.
 
 \begin{verbatim}
   split : {inp out : ℕ} (n : ℕ) (xs : Term inp out) →
@@ -679,9 +676,9 @@ dependent pair trick up our sleeves, we can define \texttt{split}.
 
 Because we are returning a \texttt{Split} value, the split will always
 hold two subterms that can be transitively combined to produce the
-original. This way, splitting \texttt{andAnd} results in two
+original. In this manner, splitting \texttt{andAnd} results in two
 \texttt{and :: []} values of type \texttt{Term 2 1} and
-\texttt{Term 3 2}, rather than anything else.
+\texttt{Term 3 2}.
 
 \subsection{Type-Preserving Crossover}
 
@@ -692,8 +689,8 @@ returns two child terms of the same type is not far away.
 \subsubsection{Split Female}
 
 For the first step in 1-point crossover we need to split the first
-parent (referred to here as the female) at some random point. Thus, we
-need to know the length of the female, then choose a random number
+parent (referred to here as the ``female'') at some random point. Thus, we
+need to know the length of the female, then choose a random number,
 bounded by that length.
 
 \begin{verbatim}
@@ -710,7 +707,7 @@ bounded by that length.
 Note that we use a \texttt{\_mod\_} function which returns a finite set
 representing the modulus of its two arguments. The definition of this
 function can be found in the supplementary source code, as it is not
-particularly relevant to what we would like to explain.
+directly relevant to the explanation at hand.
 
 Based upon the \texttt{mid} index at which the female was split, the
 male split can be determined by choosing a random member of all
@@ -731,42 +728,39 @@ possible compatible splits.
 
 \subsubsection{Propositional Equality}
 
-In the definition of \texttt{splits} we simultaneously split at all
-possible positions of the male term, and filter out ones that would
-not be compatible with respect to transitively appending them back
-together.
+In the definition of \texttt{splits}, we simultaneously split at all
+possible positions within the male term, and filter out those possibilities that
+will not allow for a successful transitive recombination.
 
-It is intuitive that in the algorithm we must compare the target \texttt{mid}
-that we are splitting on and the \texttt{mid'} in the current
-split. Normally a comparison of two terms is performed by passing them
-to a function that returns a boolean value, then doing something
-different for the true and false cases. While a boolean value is
-enough to convince a certain kind of person that action should be
-taken, it is not enough to convince a type checker.
+It is intuitive that the algorithm must compare the target \texttt{mid}
+of the original split to the \texttt{mid'} in the current
+split. Normally, a comparison of two terms is performed by passing them
+to a function that yields a boolean value, and handling the true and false
+cases differently. While a boolean value is enough to convince a certain 
+kind of person that action should be taken, it is not enough to convince a type checker.
 
 Consider the \texttt{yes p} case (analogous to a typical \texttt{true}
 case) within the \texttt{splits zero} case. We would like to return
-our freshly split \texttt{ys} value, but the type checker won't have
-it. Why not? If we look at the type signature of \texttt{splits}, it
+our freshly split \texttt{ys} value, but the type checker will not allow
+it. Why is this? If we look at the type signature of \texttt{splits}, it
 requires a \texttt{Split mid xs}, but \texttt{ys} is a \texttt{Split mid'
   xs}. Luckily the \texttt{=?} comparison function returned something
-more than just a boolean, but a constructive proof that both compared
+more than just a boolean: it produced a constructive proof that both compared
 values were in fact the same. We pass the proof \texttt{p} (pattern
 matched as \texttt{yes p}) to Agda's \texttt{rewrite} keyword to
 convince the type checker that \texttt{ys : Split mid' xs} is acceptable
 because \texttt{mid ≡ mid'}.
 
-What should you take away from all this? Mainly that the type checker
-requires formal constructive evidence in order to enforce
-invariants you prescribe. This evidence is in practice easy to work
-with, as it is made of ordinary dependent types like everything
-else. The payoff is confidence; the burden of verifying that
-a program behaves as it is expected to is lifted from the programmer's
-shoulders and onto the type checker's.
+What can we take away from all this? The primary point of interest is that
+the type checker requires formal constructive evidence in order to enforce
+invariants prescribed by the programmer. In practice, this evidence is easy to work
+with, as it is composed (as is everything else) of ordinary dependent types.
+The payoff is confidence; the burden of verifying that a program behaves as expected
+is lifted from the programmer's shoulders and onto the type checker's.
 
 \subsubsection{Split Male}
 
-When we split the male parent we choose a random member of the
+When we split the male parent, we choose a random member of the
 type-correct splits. However, this function returns a value of type
 \texttt{Maybe}, so that it may return \texttt{nothing} if there is no
 compatible split at all.
@@ -783,8 +777,7 @@ compatible split at all.
 
 Note that the proof complexity in the implementation of
 \texttt{splits} is isolated. Once we have a function definition that
-typechecks, we can freely use it without having to do any work over
-again.
+typechecks, we can freely use it without having to repeat any work.
 
 Finally, we can write \texttt{crossover} to combine the female and
 male splits, and return both children using the \texttt{swap}s defined
@@ -801,7 +794,7 @@ earlier.
   ... | just ys = swap₁ xs ys , swap₂ xs ys
 \end{verbatim}
 
-In the case where no valid male swap existed, we return the original
+In the case where no valid male swap exists, we return the original
 two parents.
 
 \section{Initialization Procedure}
@@ -809,17 +802,16 @@ two parents.
 At the onset of our GP run, we would like for our algorithm to operate
 on well-typed candidate programs. As such, the initialization function
 must be sure to only generate random type-correct programs with
-respect to our target program. By now it should come as now
-surprise that we can and will enforce this requirement
-statically. Below a simple type-safe enumeration and filter strategy
-is adopted.
+respect to our target program to evolve. By now, it should come as no
+surprise that we can (and will) enforce this requirement statically. A
+simple type-safe enumeration and filter strategy is adopted below.
 
 \subsection{Type-Safe Enumeration \& Filter}
 
-First we would like to enumerate all terms up to some max length that
-conform to a given input stack size, \texttt{enum-inp}. Then
-\texttt{filter-out} filters this result to only include terms that
-match the desired output stack size as well. The final list can be
+First, we want to enumerate all terms up to some max length that
+conform to a given input stack size, \texttt{enum-inp}. Then,
+\texttt{filter-out} filters this result to include only those terms that
+match the desired output stack size, as well. The final list can be
 used as a pool to randomly select our population from.
 
 \begin{verbatim}
@@ -829,10 +821,10 @@ used as a pool to randomly select our population from.
 \end{verbatim}
 
 Dependent pairs are used once again, allowing us to return a list
-that is homogenous for \texttt{inp} but heterogeneous for
-\texttt{out}. In order to implement this we ask the user for a
-function that determines if the precondition for a word that we would
-like to extend a term with can be satisfied by the output of said
+that is homogenous for \texttt{inp}, but heterogeneous for
+\texttt{out}. In order to implement this, we ask the user for a
+function that determines whether or not the precondition for a word that we
+want to extend a term with can be satisfied by the current output of said
 term.
 
 \begin{verbatim}
@@ -841,15 +833,15 @@ term.
   where
 \end{verbatim}
 
-Again, \texttt{Initialization} is another submodule so that the user
+Again, \texttt{Initialization} is another submodule, so the user
 is free to initialize the population by another means.
 
 \subsubsection{Decidable Relations}
 
 \texttt{Dec} is a polymorphic type constructor whose values
 represent whether some proof of the type/proposition exists, or
-whether any such proof would lead to bottom (\texttt{⊥} is a type
-without constructors, namely bottom).
+whether any such proof would lead to bottom (``bottom'', or \texttt{⊥}, is a type
+without constructors).
 
 \begin{verbatim}
   data Dec (P : Set) : Set where
@@ -860,10 +852,10 @@ without constructors, namely bottom).
 \texttt{match} uses an existential proposition (dependent
 pair) inside \texttt{Dec}, and is \textit{total} like all Agda functions.
 It effectively requires either a witness that the word's precondition
-satisfies the term's output, or a proof that no satisfying value
-exists. This means that the implementor need not worry about having
-given up the hunt for a suitable \texttt{n} too early, as can happen
-with \texttt{Maybe} (a more typical type used in this kind of situation).
+satisfies the term's output, or a proof that no such satisfying value
+exists. This means that the implementor need not worry about the search
+for a suitable \texttt{n} ending too early, as can happen
+with \texttt{Maybe} (a type used commonly in this kind of situation).
 
 \begin{verbatim}
   match not zero = no ¬p where
@@ -874,7 +866,7 @@ with \texttt{Maybe} (a more typical type used in this kind of situation).
 
 The example above proves that when the output of a term is \texttt{0},
 the precondition for \texttt{not} is unsatisfiable\footnote{A pair of empty
-  parantheses is Agda syntax used to indicate to the type
+  parentheses is Agda syntax used to indicate to the type
   checker that a value for this type is uninhabitable.}, and shows how
 to find a suitable \texttt{n} for any output greater than zero.
 
@@ -888,16 +880,17 @@ desired output is equal to what is returned.
 \section{Conclusion}
 
 Dependent types can be used to enforce desired invariants by using
-informative data types and function type signatures. We have shown
+informative data types and function type signatures. We have illustrated
 some basics for creating a verified stack-based GP implementation
 using type-safe 1-point crossover.
 
 By building on a verified base, more complex GP algorithms can be
 created, and evolutionary data can be analyzed with much greater
-confidence that implementation bugs did not affect GP run behavior.
+confidence that errors arising from implementation will not influence
+GP run behavior.
 
-Hopefully the examples presented herein can serve as a template to
-assist authors in encoding invariants for their particular flavors of
+Hopefully, the examples presented herein can serve as a helpful template,
+to assist authors in encoding invariants for their particular flavors of
 GP within the context of dependently typed programming.
 
 \subsection{Last Remarks}
