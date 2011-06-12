@@ -122,17 +122,6 @@ explored things
 > hardly an issue in any GP implementation ...). Some of these issues had already been addressed by
 > Tchernev, but in the present paper, they are solved elegantly by means of dependent types.
 > 
-> ** Some comments:
-> 
-> - The author claim "it would not be surprising if a GP implementation introduced a ﬂaw that
-> caused the population to increase or decrease from the expected total at some point in the run"
-> 
->  but I do not think that maintaining a constant-size population across generations has ever been
-> an issue in any implementation of GP. I'd rather remove that
-> sentence, and the next one.
-
-remove sentence claiming population size stability problem, and "the
-next one"?
 
 > 
 > - In the Genetic Operators section, it would be nice to have some pictures about what is meant by

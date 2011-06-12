@@ -206,13 +206,7 @@ While the type above is certainly functional, it leaves room for
 error. This brings us to our first example of preserving some GP
 invariant with the help of dependent types. Namely, the population
 that GP acts upon is expected to be a certain size, and it should stay
-that size as GP progresses from one generation to the next. Given the
-sum complexity due to initialization, selection, and genetic
-operators, it would not be surprising if a GP implementation introduced a flaw
-that caused the population to increase or decrease from the expected total
-at some point in the run. Of course, population size affects search
-space, so GP run data influenced by a fluctuation in population size would be
-potentially misleading.
+that size as GP progresses from one generation to the next.
 
 \subsection{Population Vector}
 
