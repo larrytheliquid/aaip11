@@ -114,14 +114,16 @@ approaches to do this, but for simplicity of presentation we will use
 
 \subsection{Dependent Types}
 
-Dependently typed languages have the distinguishing characteristic
-that arguments in type signatures may be assigned labels (similar to
-variable names), to be used elsewhere in type signature to declare
+Dependently typed languages allow arguments in type signatures to
+labeled (similar to value-level variable bindings) and used elsewhere in type signature to declare
 \textit{dependencies} between types and values. This paper will use the
-dependently typed purely functional programming language Agda \cite{norell:agdatut} for
+dependently typed language Agda \cite{norell:agdatut} for
 all of its examples. \footnote{It should be possible to translate examples
 to similar languages such as Epigram \cite{mcbride:epigram} or
-Idris \cite{brady:idris}.}
+Idris \cite{brady:idris}.} Agda is a purely functional language like
+Haskell \cite{spj:haskell}, but it is distinctively total (rather than
+partial) and has a more expressive type system (allowing the
+type-checker to enforce more properties).
 
 At compile time, Agda programs must pass two checks to prove their
 totality. Termination checking is accomplished by checking

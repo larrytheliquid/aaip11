@@ -56,12 +56,6 @@ more comparisons & limitations
 
 only one line devoted to goal of paper in first paragraph, no why/what/who/etc
 
-> The paper is difficult to follow for a reader who is not familiar with Agda. The author should
-> mention whether Agda is similar to other well-known functional
-> languages, such as Haskell.
-
-agda is like haskell
-
 > 
 > It would be very helpful to include some figures and running examples throughout the paper,
 > instead of inline code alternating some (frequently insufficient)
@@ -167,3 +161,7 @@ reword this sentence
 >  Could you explain a bit more this sentence?
 
 explain this better
+
+> double check all example code
+
+i remember some examples using old versions of variable names/types
