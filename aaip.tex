@@ -136,10 +136,9 @@ Consequently, Agda programs do not fail to terminate
   non-termination is what we want.}
 or crash due to unexpected input.
 
-As a rule of thumb, an Agda programmer can ignore the traditional
-distinction between compile time and runtime computations. In
-particular, any ``value level'' function can be used at the type level
-as well.
+Thanks to totality of the language, any ``value level'' function can also be
+used in type signatures to compute more precise typing requirements
+(without running into undecidability of type-checking issues). 
 
 \section{Parameters}
 

@@ -153,14 +153,6 @@ append/split & type-preserving crossover
 
 reword this sentence
 
-> 
-> - "As a rule of thumb, an Agda programmer can ignore the traditional distinction between compile
-> time and runtime computations. In particular, any “value level” function can be used at the type
-> level as well."
-> 
->  Could you explain a bit more this sentence?
-
-explain this better
 
 > double check all example code
 
