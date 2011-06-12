@@ -15,9 +15,8 @@
 \mainmatter  % start of an individual contribution
 
 \title{Verified Stack-Based Genetic Programming\\
-via Dependent Types\thanks{Under consideration for publication in
-  4th International Workshop on Approaches and Applications of
-  Inductive Programming.}}
+via Dependent Types\thanks{Accepted for presentation at the 4th
+  International Workshop on Approaches and Applications of Inductive Programming.}}
 % a short form should be given in case it is too long for the running head
 \titlerunning{Verified Stack-Based GP via Dependent Types}
 
@@ -523,19 +522,24 @@ our algorithm is doing what we expect.
 
 \subsection{Fitness Function}
 
-Once again, the final algorithm uses a module to accept a general scoring/fitness
-function as a parameter, rather than requiring an evaluation function
-tied to specific fitness cases. Here \texttt{Evolution} is a submodule
-of \texttt{DTGP}, so terms can be defined and manipulated without
-necessarily defining a scoring function for program evolution.
+Once again, we use a module to accept a general scoring/fitness
+function as a parameter. Below is an example of a function that
+assigns a program (which accepts two inputs and produces one output) a
+score equal to the number of provided examples for which it satisfies
+even parity.
 
 \begin{verbatim}
   module Evolution {inp out : ℕ} (score : Term inp out → ℕ) where
 \end{verbatim}
+\hrulefill
+\begin{verbatim}
+  score : Term 2 1 → ℕ
+  score xs = count (λ is → head (eval xs is) == evenParity is)
+    ((true :: true :: []) :: (true :: false :: []) :: 
+     (false :: true :: []) :: (false :: false :: []) :: [])
 
-Of course, typically \texttt{score} is defined to use an evaluation
-function such as the one defined above, but it may take other things
-into account (e.g. size of terms).
+  open Evolution score
+\end{verbatim}
 
 \section{Genetic Operators}
 
@@ -824,7 +828,7 @@ term.
   where
 \end{verbatim}
 
-Again, \texttt{Initialization} is another submodule, so the user
+Again, \texttt{Initialization} is another module, so the user
 is free to initialize the population by another means.
 
 \subsubsection{Decidable Relations}
