@@ -420,12 +420,23 @@ for crossover.
 When writing functions over term types, it would be tedious to provide
 a case for every word in the language. Correspondingly, we will
 extract the common parts among the constructors of our language into a
-generic term, which can be thought of as abstracting out the typing
-derivation presented above. The trick is to abstract out an explicit
-type for each rule (\texttt{Word}), as well as rule-specific functions
-for the premise/precondition and conclusion/postcondition, yielding a
-simple list-like structure.
+generic \texttt{Term}, which can be thought of as abstracting out each
+of the typing rules presented above.
 
+The trick is to use module parameters for the type of \texttt{Word}s,
+as well as \emph{functions} for the premise/precondition and
+conclusion/postcondition of each rule. The result is a generic list-like
+\texttt{Term} structure, and has the affect of making the library not
+tied to any particular language to evolve.
+
+\begin{verbatim}
+  module DTGP (Word : Set) (pre post : Word → ℕ → ℕ) where
+
+  data Term (inp : ℕ) : ℕ → Set where
+    []  : Term inp inp
+    _::_ : {n : ℕ} (w : Word) → Term inp (pre w n) → Term inp (post w n)
+\end{verbatim}
+\hrulefill
 \begin{verbatim}
   pre  : Word → ℕ → ℕ
   pre  true  n =     n
@@ -437,9 +448,7 @@ simple list-like structure.
   post not   n = 1 + n
   post and   n = 1 + n
 
-  data Term (inp : ℕ) : ℕ → Set where
-    []  : Term inp inp
-    _::_ : {n : ℕ} (w : Word) → Term inp (pre w n) → Term inp (post w n)
+  open import DTGP Word pre post
 \end{verbatim}
 
 Just like a \texttt{List} or a \texttt{Vec}, our new \texttt{Term} now
@@ -460,16 +469,6 @@ natural numbers in their types.
 
   andAnd : Term 3 1
   andAnd = and :: and :: []
-\end{verbatim}
-
-Finally, we should note that the final implementation defines
-\texttt{Word}, \texttt{pre}, and \texttt{post} to be module
-parameters, so that the library itself is not tied to a particular
-language to evolve.
-
-\begin{verbatim}
-  module DTGP (Word : Set) (pre post : Word → ℕ → ℕ) where
-  ...
 \end{verbatim}
 
 \section{Evaluation Function}
