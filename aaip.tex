@@ -64,7 +64,7 @@ competitive evolutionary results compared to tree representations
 developing a stack-based genetic programming algorithm.
 
 Researchers concerned with formal methods have produced many different
-theorem provers that could be used to prove correctness properties
+theorem provers that could be used to prove correctness properties in
 GP. However, typical GP researchers are more familiar with programming
 languages than proof assistants. Dependently typed languages such as
 Agda \cite{norell:agdatut} are a nice fit because they are expressive
@@ -150,9 +150,9 @@ Consequently, Agda programs do not fail to terminate
   non-termination is what we want.}
 or crash due to unexpected input.
 
-Thanks to totality of the language, any ``value level'' function can also be
+Thanks to this totality of the language, any ``value level'' function can also be
 used in type signatures to compute more precise typing requirements
-(without running into undecidability of type-checking issues). 
+(without running into ambiguous type-checking issues).
 
 \section{Parameters}
 
