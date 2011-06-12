@@ -1,109 +1,185 @@
------------------------ REVIEW 1 ---------------------
-PAPER: 4
-TITLE: Verified Stack-Based Genetic Programming via Dependent Types
-AUTHORS: Larry Diehl
+<<<<<<< HEAD
+> ----------------------- REVIEW 1 ---------------------
+> PAPER: 4
+> TITLE: Verified Stack-Based Genetic Programming via Dependent Types
+> AUTHORS: Larry Diehl
+> 
+> OVERALL RATING: 1 (weak accept)
+> REVIEWER'S CONFIDENCE: 1 (low)
+> Relevance to IP: 4 (good)
+> Originality: 3 (fair)
+> Significance: 3 (fair)
+> Technical Soundness: 3 (fair)
+> Presentation: 3 (fair)
+> Scholarship: 2 (poor)
+> Suitable for a journal special issue on Inductive Programming: 2 (probably, with revisions)
+> 
+> This paper presents the implementation of a GP template for the programming language Agda, using
+> Dependently Typed Programming. Most of the paper is full of code in Agda, with a point-by-point
+> illustration of the implementation.
+> 
+> I think this implementation might be useful, and there might be some advantages of using stack-
+> based genetic programming via dependent types using Agda. However, there are some problems about
+> the motivations of the work, its comparison with other works and, very especially, about the way
+> it is written.
 
-OVERALL RATING: 1 (weak accept)
-REVIEWER'S CONFIDENCE: 1 (low)
-Relevance to IP: 4 (good)
-Originality: 3 (fair)
-Significance: 3 (fair)
-Technical Soundness: 3 (fair)
-Presentation: 3 (fair)
-Scholarship: 2 (poor)
-Suitable for a journal special issue on Inductive Programming: 2 (probably, with revisions)
+motivations, comparisons with other works, and way it was written
 
-This paper presents the implementation of a GP template for the programming language Agda, using
-Dependently Typed Programming. Most of the paper is full of code in Agda, with a point-by-point
-illustration of the implementation.
+> 
+> The justification of why stack-based genetic programming might be better than other approaches to
+> genetic programming should be discussed more thoroughly. A similar thing can be said about the
+> use of dependent types. 
 
-I think this implementation might be useful, and there might be some advantages of using stack-
-based genetic programming via dependent types using Agda. However, there are some problems about
-the motivations of the work, its comparison with other works and, very especially, about the way
-it is written.
+justification for stack gp and dtp
 
-The justification of why stack-based genetic programming might be better than other approaches to
-genetic programming should be discussed more thoroughly. A similar thing can be said about the
-use of dependent types. Does this reduce the search space for the genetic programming process?
-Does it  ease the definition of cross-over operators? ... I would like to see more comments on
-this. And, of course, it would be interesting to mention and compare to other genetic programming
-schemas using functional programming, their limitations and why this approach could be better in
-some way or another.
+> Does this reduce the search space for the genetic programming
+> process?
 
-The writing is correct and careful, but paper organisation is awkward. It looks like a manual
-rather than a scientific paper. There's only one line devoted to the goal of the paper in the
-first paragraph and then the rest starts with many things taken for granted: why, what, who, etc.
-The paper is difficult to follow for a reader who is not familiar with Agda. The author should
-mention whether Agda is similar to other well-known functional languages, such as Haskell.
+stack gp does
 
-It would be very helpful to include some figures and running examples throughout the paper,
-instead of inline code alternating some (frequently insufficient) explanations.
+> Does it  ease the definition of cross-over operators? ... 
 
-Sections 3 and 4 are very difficult to follow. Many functions (modules) are just shown in a very
-schematic way. I would have liked to see some particular instances for these functions,
-especially for the evaluation function.
+Yes
 
-Some (toy) experiments (e.g. previous to the conclusion) would be very helpful to see that the
-template can be instantiated to make a good genetic programming system.
+> I would like to see more comments on
+> this. And, of course, it would be interesting to mention and compare to other genetic programming
+> schemas using functional programming, their limitations and why this approach could be better in
+> some way or another.
 
-Finally, section 7.1 ("remarks") is awkward. It looks like a disclaimer or a clarification of
-what has been read until that point. Perhaps a better place for these clarifications could be the
-introduction.
+more comparisons & limitations
 
-Overall, there is an interesting job here, but there are some problems about convincingly showing
-the relevance of this work and making it more understandable for a more general audience.
+> 
+> The writing is correct and careful, but paper organisation is awkward. It looks like a manual
+> rather than a scientific paper. There's only one line devoted to the goal of the paper in the
+> first paragraph and then the rest starts with many things taken for
+> granted: why, what, who, etc.
+
+only one line devoted to goal of paper in first paragraph, no why/what/who/etc
+
+> The paper is difficult to follow for a reader who is not familiar with Agda. The author should
+> mention whether Agda is similar to other well-known functional
+> languages, such as Haskell.
+
+agda is like haskell
+
+> 
+> It would be very helpful to include some figures and running examples throughout the paper,
+> instead of inline code alternating some (frequently insufficient)
+> explanations.
+
+running examples instead of inline code & frequently insufficient explanations
+
+> 
+> Sections 3 and 4 are very difficult to follow. Many functions (modules) are just shown in a very
+> schematic way. I would have liked to see some particular instances for these functions,
+> especially for the evaluation function.
+
+section 3 & 4: show examples of functions being used, especially for evaluation
+
+> 
+> Some (toy) experiments (e.g. previous to the conclusion) would be very helpful to see that the
+> template can be instantiated to make a good genetic programming
+> system.
+
+toy experiments previous to the conclusion... instantiating the algo
+
+> 
+> Finally, section 7.1 ("remarks") is awkward. It looks like a disclaimer or a clarification of
+> what has been read until that point. Perhaps a better place for these clarifications could be the
+> introduction.
+
+7.1 reads like a "disclaimer", put it at beginning?
+
+> 
+> Overall, there is an interesting job here, but there are some problems about convincingly showing
+> the relevance of this work and making it more understandable for a
+> more general audience.
+
+problems showing relevance of work
+
+need to make it understandable to general audience
+
+> 
+> 
+> ----------------------- REVIEW 2 ---------------------
+> PAPER: 4
+> TITLE: Verified Stack-Based Genetic Programming via Dependent Types
+> AUTHORS: Larry Diehl
+> 
+> OVERALL RATING: 1 (weak accept)
+> REVIEWER'S CONFIDENCE: 2 (medium)
+> Relevance to IP: 4 (good)
+> Originality: 3 (fair)
+> Significance: 3 (fair)
+> Technical Soundness: 4 (good)
+> Presentation: 3 (fair)
+> Scholarship: 3 (fair)
+> Suitable for a journal special issue on Inductive Programming: 2 (probably, with revisions)
+> 
+> The goal of this paper is to provide an implementation of Stack-based Genetic Programming using
+> dependent types in the Agda language. Two relevant issues are explored: initialization and
+> genetic operators.
+
+initialization and genetic operators feel like the most relevantly
+explored things
+
+> Other issues are also treated, but perhaps they are less relevant (for
+> instance, ensuring that the genetic programming population remains constant across generations is
+> hardly an issue in any GP implementation ...). Some of these issues had already been addressed by
+> Tchernev, but in the present paper, they are solved elegantly by means of dependent types.
+> 
+> ** Some comments:
+> 
+> - The author claim "it would not be surprising if a GP implementation introduced a ﬂaw that
+> caused the population to increase or decrease from the expected total at some point in the run"
+> 
+>  but I do not think that maintaining a constant-size population across generations has ever been
+> an issue in any implementation of GP. I'd rather remove that
+> sentence, and the next one.
+
+remove sentence claiming population size stability problem, and "the
+next one"?
+
+> 
+> - In the Genetic Operators section, it would be nice to have some pictures about what is meant by
+> Transitive Append, Transitive Split, and Type-Preserving Crossover (i.e. a graphical depiction of
+> how to perform a correct type-preserving crossover). This could be useful for GP researchers who
+> are not extremely fluent in Agda. If you need some space, you might
+> shorten Section 2 a bit.
+
+shorten section 2 a bit to make space for pictures of transitive
+append/split & type-preserving crossover
+
+> 
+> - Reference 'E. Brady. Idris, a language with dependent types — extended abstract' is incomplete,
+> please complete it.
+
+idris reference is broken
+
+> 
+> ** Some sentences are difficult to understand. For instance:
+> 
+> - "... we hope to help researchers avoid erroneously attributing evolutionary explanations to GP
+> run phenomena by using a veriﬁed implementation." (at the end of the
+> abstract)
+
+reword this sentence
+
+> 
+> - "As a rule of thumb, an Agda programmer can ignore the traditional distinction between compile
+> time and runtime computations. In particular, any “value level” function can be used at the type
+> level as well."
+> 
+>  Could you explain a bit more this sentence?
+
+explain this better
+
+> 
+> - "While a boolean value is enough to convince a certain kind of person that action should be
+> taken, it is not enough to convince a type checker."
+> 
+>  This sentence sounds very strange ... could you rephrase it?
+
+reword this sentence
 
 
------------------------ REVIEW 2 ---------------------
-PAPER: 4
-TITLE: Verified Stack-Based Genetic Programming via Dependent Types
-AUTHORS: Larry Diehl
-
-OVERALL RATING: 1 (weak accept)
-REVIEWER'S CONFIDENCE: 2 (medium)
-Relevance to IP: 4 (good)
-Originality: 3 (fair)
-Significance: 3 (fair)
-Technical Soundness: 4 (good)
-Presentation: 3 (fair)
-Scholarship: 3 (fair)
-Suitable for a journal special issue on Inductive Programming: 2 (probably, with revisions)
-
-The goal of this paper is to provide an implementation of Stack-based Genetic Programming using
-dependent types in the Agda language. Two relevant issues are explored: initialization and
-genetic operators. Other issues are also treated, but perhaps they are less relevant (for
-instance, ensuring that the genetic programming population remains constant across generations is
-hardly an issue in any GP implementation ...). Some of these issues had already been addressed by
-Tchernev, but in the present paper, they are solved elegantly by means of dependent types.
-
-** Some comments:
-
-- The author claim "it would not be surprising if a GP implementation introduced a ﬂaw that
-caused the population to increase or decrease from the expected total at some point in the run"
-
- but I do not think that maintaining a constant-size population across generations has ever been
-an issue in any implementation of GP. I'd rather remove that sentence, and the next one.
-
-- In the Genetic Operators section, it would be nice to have some pictures about what is meant by
-Transitive Append, Transitive Split, and Type-Preserving Crossover (i.e. a graphical depiction of
-how to perform a correct type-preserving crossover). This could be useful for GP researchers who
-are not extremely fluent in Agda. If you need some space, you might shorten Section 2 a bit.
-
-- Reference 'E. Brady. Idris, a language with dependent types — extended abstract' is incomplete,
-please complete it.
-
-** Some sentences are difficult to understand. For instance:
-
-- "... we hope to help researchers avoid erroneously attributing evolutionary explanations to GP
-run phenomena by using a veriﬁed implementation." (at the end of the abstract)
-
-- "As a rule of thumb, an Agda programmer can ignore the traditional distinction between compile
-time and runtime computations. In particular, any “value level” function can be used at the type
-level as well."
-
- Could you explain a bit more this sentence?
-
-- "While a boolean value is enough to convince a certain kind of person that action should be
-taken, it is not enough to convince a type checker."
-
- This sentence sounds very strange ... could you rephrase it?
