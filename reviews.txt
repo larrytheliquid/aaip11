@@ -41,8 +41,7 @@ stack gp does
 
 Yes
 
-> I would like to see more comments on
-> this. And, of course, it would be interesting to mention and compare to other genetic programming
+> And, of course, it would be interesting to mention and compare to other genetic programming
 > schemas using functional programming, their limitations and why this approach could be better in
 > some way or another.
 
@@ -132,15 +131,6 @@ explored things
 
 shorten section 2 a bit to make space for pictures of transitive
 append/split & type-preserving crossover
-
-> 
-> ** Some sentences are difficult to understand. For instance:
-> 
-> - "... we hope to help researchers avoid erroneously attributing evolutionary explanations to GP
-> run phenomena by using a veriﬁed implementation." (at the end of the
-> abstract)
-
-reword this sentence
 
 
 > double check all example code
