@@ -22,7 +22,7 @@ via Dependent Types\thanks{Under consideration for publication in
 \titlerunning{Verified Stack-Based GP via Dependent Types}
 
 \author{Larry Diehl}
-\institute{\url{http://github.com/larrytheliquid}}
+\institute{\url{http://github.com/larrytheliquid/dtgp/tree/aaip11}}
 
 \maketitle
 \begin{abstract}
@@ -659,7 +659,12 @@ returns two child terms of the same type is not far away.
 \subsubsection{Split Female}
 
 For the first step in 1-point crossover we need to split the first
-parent (referred to here as the ``female'') at some random point. Thus, we
+parent (referred to here as the ``female'') at some random\footnote{To keep the example as simple as possible, here we pass
+  the random number as a parameter to the function. The final
+  implementation uses a standard \texttt{State} monad containing a
+  random number seed for increased modularity and to avoid mistakenly
+  reusing a random number.}
+point. Thus, we
 need to know the length of the female, then choose a random number,
 bounded by that length.
 
@@ -851,6 +856,11 @@ desired output is equal to what is returned.
 
 \section{Conclusion}
 
+We have given an outline for a parameterized GP library whose
+operations are verified using dependent types. The same library can be
+used to evolve languages operating on domains besides booleans, such
+as the natural numbers, etc.
+
 Dependent types can be used to enforce desired invariants by using
 informative data types and function type signatures. We have illustrated
 some basics for creating a verified stack-based GP implementation
@@ -864,26 +874,6 @@ GP run behavior.
 Hopefully, the examples presented herein can serve as a helpful template,
 to assist authors in encoding invariants for their particular flavors of
 GP within the context of dependently typed programming.
-
-\subsection{Last Remarks}
-
-The boolean language used in all the examples\footnote{Example code
-  for what is described above and some extensions below can
-  be found at http://github.com/larrytheliquid/dtgp/tree/aaip11
-} is of course just a toy,
-and more interesting languages can be encoded. Constructors of
-\texttt{Word} support parameterization. For example, \texttt{nat : ℕ →
-  Word} could be used to support a single constructor for all natural
-numbers. Further, since the initialization functions just take a list
-of words, ephemeral random constant-like behavior is supported by
-including multiple such instantiations in an argument
-(e.g. \texttt{nat 1 :: nat 2 :: nat 3 :: plus :: times :: []}). 
-
-The functions described herein explicitly passed around random
-numbers. This was fine to illustrate the examples, but the final code
-instead uses a simple \texttt{State} monad containing a random number
-seed for increased modularity and to avoid mistakenly reusing a random
-number.
 
 Finally, the techniques trivially extend to languages with multiple
 type stacks by parameterizing the main module over the domain type

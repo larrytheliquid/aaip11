@@ -67,7 +67,11 @@ running examples instead of inline code & frequently insufficient explanations
 > schematic way. I would have liked to see some particular instances for these functions,
 > especially for the evaluation function.
 
-section 3 & 4: show examples of functions being used, especially for evaluation
+section 3 & 4: show examples of functions being used, especially for
+evaluation
+
+instantiate the modules for DTGP!! and one for Evolution that shows a
+scoring function!!
 
 > 
 > Some (toy) experiments (e.g. previous to the conclusion) would be very helpful to see that the
@@ -136,3 +140,7 @@ append/split & type-preserving crossover
 > double check all example code
 
 i remember some examples using old versions of variable names/types
+
+> subfigure for typing rules next to agda typing rules
+
+> consider different name for "typing derivation"
