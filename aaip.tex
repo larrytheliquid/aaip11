@@ -711,8 +711,10 @@ It is intuitive that the algorithm must compare the target \texttt{mid}
 of the original split to the \texttt{mid'} in the current
 split. Normally, a comparison of two terms is performed by passing them
 to a function that yields a boolean value, and handling the true and false
-cases differently. While a boolean value is enough to convince a certain 
-kind of person that action should be taken, it is not enough to convince a type checker.
+cases differently. However, we need a richer version of the
+boolean type (the propositional equality type) whose values are
+associated with extra type-level information that can be used to make
+a \texttt{Split} value typecheck.
 
 Consider the \texttt{yes p} case (analogous to a typical \texttt{true}
 case) within the \texttt{splits zero} case. We would like to return

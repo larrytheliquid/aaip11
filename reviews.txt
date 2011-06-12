@@ -151,12 +151,6 @@ shorten section 2 a bit to make space for pictures of transitive
 append/split & type-preserving crossover
 
 > 
-> - Reference 'E. Brady. Idris, a language with dependent types — extended abstract' is incomplete,
-> please complete it.
-
-idris reference is broken
-
-> 
 > ** Some sentences are difficult to understand. For instance:
 > 
 > - "... we hope to help researchers avoid erroneously attributing evolutionary explanations to GP
@@ -173,13 +167,3 @@ reword this sentence
 >  Could you explain a bit more this sentence?
 
 explain this better
-
-> 
-> - "While a boolean value is enough to convince a certain kind of person that action should be
-> taken, it is not enough to convince a type checker."
-> 
->  This sentence sounds very strange ... could you rephrase it?
-
-reword this sentence
-
-
