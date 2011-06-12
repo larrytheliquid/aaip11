@@ -45,18 +45,33 @@ to GP run phenomena by using a verified implementation.
 
 \section{Introduction}
 
+The goal of this work is not to come up with a novel GP algorithm with
+respect to evolutionary performance, but rather give an example of a
+non-trivial but verified and simple-to-understand GP
+implementation. As GP algorithms and techniques increase in complexity
+and sophistication, it becomes more important to verify that the parts and
+the whole of the algorithm are doing what is expected. Towards this
+end we present the groundwork of basic verified GP, with special emphasis on
+correctness of the crossover operation.
+
 While the earliest work in Genetic Programming used tree structures as
 candidate solutions to a problem, many alternative representations
-have been developed since (\textit{e.g.}, linear, graph, grammar-based). The
-goal of this work is not to come up with a novel GP algorithm with
-respect to evolutionary performance, but rather give an example of a
-non-trivial but verified and simple-to-understand GP implementation.
-
+have been developed since (\textit{e.g.}, linear, graph,
+grammar-based).
 Flat linear structures are conceptually simpler than nested trees and
 intimately familiar to functional programmers, yet still provide
 competitive evolutionary results compared to tree representations
 \cite{tchernev:crossmethods}. As such, we will concentrate on
 developing a stack-based genetic programming algorithm.
+
+Researchers concerned with formal methods have produced many different
+theorem provers that could be used to prove correctness properties
+GP. However, typical GP researchers are more familiar with programming
+languages than proof assistants. Dependently typed languages such as
+Agda \cite{norell:agdatut} are a nice fit because they are expressive
+enough at the type level to enforce invariants present in GP, while
+retaining the look and feel of a programming language rather than a
+proof assistant.
 
 After a general overview of stack languages and dependent types, the
 structure of the paper will follow a common classification scheme for
