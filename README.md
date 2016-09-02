@@ -1,5 +1,5 @@
 Hereditary Substitution by Canonical Evaluation (SbE)
 =====================================================
 
-Agda code for [technical report](http://www.larrytheliquid.com/drafts/infir.pdf) by Larry Diehl and Tim Sheard.
+Agda code for [paper](http://www.cogsys.wiai.uni-bamberg.de/aaip11/accepted/diehl.pdf) by Larry Diehl.
 
